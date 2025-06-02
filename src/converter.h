@@ -42,6 +42,8 @@ public:
     
     bool isFFmpegAvailable();
 
+    QString buildFFmpegCommand(const ConversionSettings &settings, bool isSequenceToVideo);
+
 signals:
     void progressChanged(int percentage);
     void finished(bool success, const QString &message);
@@ -53,7 +55,6 @@ private slots:
     void onProcessOutput();
 
 private:
-    QString buildFFmpegCommand(const ConversionSettings &settings, bool isSequenceToVideo);
     QString getVideoCodecName(const QString &codec);
     QString getVideoFormatExtension(const QString &format);
     QStringList findImageFiles(const QString &directory);

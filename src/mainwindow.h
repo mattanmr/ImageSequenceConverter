@@ -39,6 +39,7 @@ private slots:
     void onConversionModeChanged();
     void updateFrameRateDisplay(int value);
     void updateQualityDisplay(int value);
+    void previewCommand();
 
 private:
     void setupUI();
@@ -59,6 +60,7 @@ private:
     QPushButton *inputBrowseBtn;
     QPushButton *outputBrowseBtn;
     QPushButton *convertBtn;
+    QPushButton *previewBtn;
     QProgressBar *progressBar;
     QTextEdit *logOutput;
     

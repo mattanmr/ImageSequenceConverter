@@ -169,10 +169,18 @@ void MainWindow::setupSequenceToVideoTab()
     convertBtn->setMinimumHeight(40);
     convertBtn->setMaximumWidth(300);  // Limit button width
     convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
+
+    // Preview button
+    previewBtn = new QPushButton("Preview Command", this);
+    previewBtn->setMinimumHeight(40);
+    previewBtn->setMaximumWidth(300);
+    previewBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; background-color: #4CAF50; }");
     
-    // Center the button
+    // Center the buttons
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
+    buttonLayout->addWidget(previewBtn);
+    buttonLayout->addSpacing(10);  // Add space between buttons
     buttonLayout->addWidget(convertBtn);
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
@@ -306,6 +314,7 @@ void MainWindow::connectSignals()
     connect(inputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectInputPath);
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
+    connect(previewBtn, &QPushButton::clicked, this, &MainWindow::previewCommand);
     
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
             this, &MainWindow::updateFrameRateDisplay);
@@ -415,6 +424,39 @@ void MainWindow::updateQualityDisplay(int value)
     else quality = "Very Low";
     
     qualityLabel->setText(QString("%1 (CRF %2)").arg(quality).arg(value));
+}
+void MainWindow::previewCommand()
+{
+    QString inputPath = inputPathEdit->text();
+    QString outputPath = outputPathEdit->text();
+    
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input and output paths first.");
+        return;
+    }
+    
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.videoFormat = videoFormatCombo->currentText().toLower();
+    settings.videoCodec = videoCodecCombo->currentText();
+    settings.frameRate = frameRateSpinBox->value();
+    settings.quality = qualitySpinBox->value();
+    settings.width = widthSpinBox->value();
+    settings.height = heightSpinBox->value();
+    settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    
+    // Create a temporary converter to build the command
+    Converter tempConverter;
+    QString command = tempConverter.buildFFmpegCommand(settings, true);
+    
+    // Show command in a dialog
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("FFmpeg Command Preview");
+    msgBox.setText("The following command will be executed:");
+    msgBox.setDetailedText(command);
+    msgBox.setStyleSheet("QMessageBox { messagebox-text-interaction-flags: 5; }");
+    msgBox.exec();
 }
 
 void MainWindow::updateUIForMode()
