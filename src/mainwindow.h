@@ -39,6 +39,8 @@ private slots:
     void onConversionModeChanged();
     void updateFrameRateDisplay(int value);
     void updateQualityDisplay(int value);
+    void startVideoToSequenceConversion();
+
 
 private:
     void setupUI();
@@ -78,6 +80,10 @@ private:
     QSpinBox *startFrameSpinBox;
     QSpinBox *endFrameSpinBox;
     QCheckBox *extractAllFrames;
+    QLineEdit *videoInputEdit;
+    QLineEdit *seqOutputEdit;
+    QPushButton *convertVideoBtn;
+
     
     // Backend
     Converter *converter;

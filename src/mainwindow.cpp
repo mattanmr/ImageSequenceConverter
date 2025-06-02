@@ -197,7 +197,7 @@ void MainWindow::setupVideoToSequenceTab()
     // Video input row
     QHBoxLayout *videoInputLayout = new QHBoxLayout();
     videoInputLayout->addWidget(new QLabel("Input Video:"));
-    QLineEdit *videoInputEdit = new QLineEdit(this);
+    videoInputEdit = new QLineEdit(this);
     videoInputEdit->setPlaceholderText("Select video file...");
     videoInputLayout->addWidget(videoInputEdit, 1);
     QPushButton *videoBrowseBtn = new QPushButton("Browse...", this);
@@ -208,7 +208,7 @@ void MainWindow::setupVideoToSequenceTab()
     // Sequence output row
     QHBoxLayout *seqOutputLayout = new QHBoxLayout();
     seqOutputLayout->addWidget(new QLabel("Output Directory:"));
-    QLineEdit *seqOutputEdit = new QLineEdit(this);
+    seqOutputEdit = new QLineEdit(this);
     seqOutputEdit->setPlaceholderText("Select output directory...");
     seqOutputLayout->addWidget(seqOutputEdit, 1);
     QPushButton *seqBrowseBtn = new QPushButton("Browse...", this);
@@ -261,7 +261,7 @@ void MainWindow::setupVideoToSequenceTab()
     mainLayout->addWidget(imageGroup);
     
     // Convert button
-    QPushButton *convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
+    convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
     convertVideoBtn->setMinimumHeight(40);
     convertVideoBtn->setMaximumWidth(300);
     convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
@@ -276,7 +276,7 @@ void MainWindow::setupVideoToSequenceTab()
     mainLayout->addStretch();
     
     // Connect video tab signals
-    connect(videoBrowseBtn, &QPushButton::clicked, [this, videoInputEdit]() {
+    connect(videoBrowseBtn, &QPushButton::clicked, [this]() {
         QString fileName = QFileDialog::getOpenFileName(this, 
             "Select Video File", 
             QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
@@ -285,8 +285,8 @@ void MainWindow::setupVideoToSequenceTab()
             videoInputEdit->setText(fileName);
         }
     });
-    
-    connect(seqBrowseBtn, &QPushButton::clicked, [this, seqOutputEdit]() {
+
+    connect(seqBrowseBtn, &QPushButton::clicked, [this]() {
         QString dirName = QFileDialog::getExistingDirectory(this, 
             "Select Output Directory",
             QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
@@ -294,6 +294,7 @@ void MainWindow::setupVideoToSequenceTab()
             seqOutputEdit->setText(dirName);
         }
     });
+
     
     connect(extractAllFrames, &QCheckBox::toggled, [this](bool checked) {
         startFrameSpinBox->setEnabled(!checked);
@@ -306,6 +307,8 @@ void MainWindow::connectSignals()
     connect(inputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectInputPath);
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
+    connect(convertVideoBtn, &QPushButton::clicked, this, &MainWindow::startVideoToSequenceConversion);
+
     
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
             this, &MainWindow::updateFrameRateDisplay);
@@ -373,6 +376,38 @@ void MainWindow::startConversion()
     isConverting = true;
     
     converter->convertSequenceToVideo(settings);
+}
+
+void MainWindow::startVideoToSequenceConversion()
+{
+    if (isConverting) {
+        converter->cancel();
+        return;
+    }
+
+    QString inputVideo = videoInputEdit->text();
+    QString outputDir = seqOutputEdit->text();
+
+    if (inputVideo.isEmpty() || outputDir.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input video and output directory.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputVideo;
+    settings.outputPath = outputDir;
+    settings.imageFormat = imageFormatCombo->currentText();
+    settings.extractAllFrames = extractAllFrames->isChecked();
+    settings.startFrame = startFrameSpinBox->value();
+    settings.endFrame = endFrameSpinBox->value();
+
+    logOutput->clear();
+    progressBar->setVisible(true);
+    progressBar->setValue(0);
+    convertVideoBtn->setText("Cancel");
+    isConverting = true;
+
+    converter->convertVideoToSequence(settings);
 }
 
 void MainWindow::onConversionProgress(int percentage)
