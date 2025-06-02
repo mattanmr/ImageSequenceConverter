@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QStandardPaths>
+#include <droplineedit.h>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -68,7 +69,7 @@ void MainWindow::setupSequenceToVideoTab()
     // Input row
     QHBoxLayout *inputLayout = new QHBoxLayout();
     inputLayout->addWidget(new QLabel("Input Directory:"));
-    inputPathEdit = new QLineEdit(this);
+    inputPathEdit = new DropLineEdit(this);
     inputPathEdit->setPlaceholderText("Select folder containing image sequence...");
     inputLayout->addWidget(inputPathEdit, 1);  // Stretch factor
     inputBrowseBtn = new QPushButton("Browse...", this);
@@ -79,7 +80,7 @@ void MainWindow::setupSequenceToVideoTab()
     // Output row
     QHBoxLayout *outputLayout = new QHBoxLayout();
     outputLayout->addWidget(new QLabel("Output Video:"));
-    outputPathEdit = new QLineEdit(this);
+    outputPathEdit = new DropLineEdit(this);
     outputPathEdit->setPlaceholderText("Select output video file...");
     outputLayout->addWidget(outputPathEdit, 1);  // Stretch factor
     outputBrowseBtn = new QPushButton("Browse...", this);
@@ -197,7 +198,7 @@ void MainWindow::setupVideoToSequenceTab()
     // Video input row
     QHBoxLayout *videoInputLayout = new QHBoxLayout();
     videoInputLayout->addWidget(new QLabel("Input Video:"));
-    videoInputEdit = new QLineEdit(this);
+    videoInputEdit = new DropLineEdit(this);
     videoInputEdit->setPlaceholderText("Select video file...");
     videoInputLayout->addWidget(videoInputEdit, 1);
     QPushButton *videoBrowseBtn = new QPushButton("Browse...", this);
@@ -208,7 +209,7 @@ void MainWindow::setupVideoToSequenceTab()
     // Sequence output row
     QHBoxLayout *seqOutputLayout = new QHBoxLayout();
     seqOutputLayout->addWidget(new QLabel("Output Directory:"));
-    seqOutputEdit = new QLineEdit(this);
+    seqOutputEdit = new DropLineEdit(this);
     seqOutputEdit->setPlaceholderText("Select output directory...");
     seqOutputLayout->addWidget(seqOutputEdit, 1);
     QPushButton *seqBrowseBtn = new QPushButton("Browse...", this);
@@ -272,6 +273,11 @@ void MainWindow::setupVideoToSequenceTab()
     buttonLayout->addWidget(convertVideoBtn);
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
+
+    videoInputEdit->setAcceptDrops(true);
+    inputPathEdit->setAcceptDrops(true);
+    seqOutputEdit->setAcceptDrops(true);
+    outputPathEdit->setAcceptDrops(true);
     
     mainLayout->addStretch();
     
