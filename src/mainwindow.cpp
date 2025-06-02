@@ -174,7 +174,7 @@ void MainWindow::setupSequenceToVideoTab()
     previewBtn = new QPushButton("Preview Command", this);
     previewBtn->setMinimumHeight(40);
     previewBtn->setMaximumWidth(300);
-    previewBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; background-color: #4CAF50; }");
+    previewBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
     
     // Center the buttons
     QHBoxLayout *buttonLayout = new QHBoxLayout();
