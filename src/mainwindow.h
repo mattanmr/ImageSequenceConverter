@@ -65,9 +65,9 @@ private:
     // Sequence to Video controls
     QComboBox *videoFormatCombo;
     QComboBox *videoCodecCombo;
-    QSlider *frameRateSlider;
+    QSpinBox *frameRateSpinBox;
     QLabel *frameRateLabel;
-    QSlider *qualitySlider;
+    QSpinBox *qualitySpinBox;
     QLabel *qualityLabel;
     QSpinBox *widthSpinBox;
     QSpinBox *heightSpinBox;

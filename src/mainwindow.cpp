@@ -92,18 +92,18 @@ void MainWindow::setupSequenceToVideoTab()
     videoLayout->addWidget(videoCodecCombo, 0, 3);
     
     videoLayout->addWidget(new QLabel("Frame Rate:"), 1, 0);
-    frameRateSlider = new QSlider(Qt::Horizontal, this);
-    frameRateSlider->setRange(1, 60);
-    frameRateSlider->setValue(24);
-    videoLayout->addWidget(frameRateSlider, 1, 1);
+    frameRateSpinBox = new QSpinBox(this);
+    frameRateSpinBox->setRange(1, 60);
+    frameRateSpinBox->setValue(24);
+    videoLayout->addWidget(frameRateSpinBox, 1, 1);
     frameRateLabel = new QLabel("24 fps", this);
     videoLayout->addWidget(frameRateLabel, 1, 2);
     
     videoLayout->addWidget(new QLabel("Quality:"), 2, 0);
-    qualitySlider = new QSlider(Qt::Horizontal, this);
-    qualitySlider->setRange(1, 51);
-    qualitySlider->setValue(23);
-    videoLayout->addWidget(qualitySlider, 2, 1);
+    qualitySpinBox = new QSpinBox(this);
+    qualitySpinBox->setRange(1, 51);
+    qualitySpinBox->setValue(23);
+    videoLayout->addWidget(qualitySpinBox, 2, 1);
     qualityLabel = new QLabel("High (CRF 23)", this);
     videoLayout->addWidget(qualityLabel, 2, 2);
     
@@ -231,8 +231,8 @@ void MainWindow::connectSignals()
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
     
-    connect(frameRateSlider, &QSlider::valueChanged, this, &MainWindow::updateFrameRateDisplay);
-    connect(qualitySlider, &QSlider::valueChanged, this, &MainWindow::updateQualityDisplay);
+    //connect(frameRateSpinBox, &QSlider::valueChanged, this, &MainWindow::updateFrameRateDisplay);
+    //connect(qualitySpinBox, &QSlider::valueChanged, this, &MainWindow::updateQualityDisplay);
     
     connect(converter, &Converter::progressChanged, this, &MainWindow::onConversionProgress);
     connect(converter, &Converter::finished, this, &MainWindow::onConversionFinished);
@@ -279,8 +279,8 @@ void MainWindow::startConversion()
     settings.outputPath = outputPath;
     settings.videoFormat = videoFormatCombo->currentText().toLower();
     settings.videoCodec = videoCodecCombo->currentText();
-    settings.frameRate = frameRateSlider->value();
-    settings.quality = qualitySlider->value();
+    settings.frameRate = frameRateSpinBox->value();
+    settings.quality = qualitySpinBox->value();
     settings.width = widthSpinBox->value();
     settings.height = heightSpinBox->value();
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
