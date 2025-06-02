@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QStandardPaths>
+#include <iostream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -205,21 +206,21 @@ void MainWindow::setupVideoToSequenceTab()
     // Video input row
     QHBoxLayout *videoInputLayout = new QHBoxLayout();
     videoInputLayout->addWidget(new QLabel("Input Video:"));
-    QLineEdit *videoInputEdit = new QLineEdit(this);
+    videoInputEdit = new QLineEdit(this);  // Remove QLineEdit* declaration
     videoInputEdit->setPlaceholderText("Select video file...");
     videoInputLayout->addWidget(videoInputEdit, 1);
-    QPushButton *videoBrowseBtn = new QPushButton("Browse...", this);
+    videoBrowseBtn = new QPushButton("Browse...", this);  // Remove QPushButton* declaration
     videoBrowseBtn->setMaximumWidth(80);
     videoInputLayout->addWidget(videoBrowseBtn);
     ioLayout->addLayout(videoInputLayout);
-    
+
     // Sequence output row
     QHBoxLayout *seqOutputLayout = new QHBoxLayout();
     seqOutputLayout->addWidget(new QLabel("Output Directory:"));
-    QLineEdit *seqOutputEdit = new QLineEdit(this);
+    seqOutputEdit = new QLineEdit(this);  // Remove QLineEdit* declaration
     seqOutputEdit->setPlaceholderText("Select output directory...");
     seqOutputLayout->addWidget(seqOutputEdit, 1);
-    QPushButton *seqBrowseBtn = new QPushButton("Browse...", this);
+    seqBrowseBtn = new QPushButton("Browse...", this);  // Remove QPushButton* declaration
     seqBrowseBtn->setMaximumWidth(80);
     seqOutputLayout->addWidget(seqBrowseBtn);
     ioLayout->addLayout(seqOutputLayout);
@@ -269,14 +270,22 @@ void MainWindow::setupVideoToSequenceTab()
     mainLayout->addWidget(imageGroup);
     
     // Convert button
-    QPushButton *convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
+    convertVideoBtn = new QPushButton("Convert to Image Sequence", this);  // Remove QPushButton* declaration
     convertVideoBtn->setMinimumHeight(40);
     convertVideoBtn->setMaximumWidth(300);
     convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
+
+    // Preview button for video tab
+    previewVideoBtn = new QPushButton("Preview Command", this);
+    previewVideoBtn->setMinimumHeight(40);
+    previewVideoBtn->setMaximumWidth(300);
+    previewVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
     
-    // Center the button
+    // Center the buttons
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->addStretch();
+    buttonLayout->addWidget(previewVideoBtn);
+    buttonLayout->addSpacing(10);  // Add space between buttons
     buttonLayout->addWidget(convertVideoBtn);
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
@@ -315,6 +324,7 @@ void MainWindow::connectSignals()
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
     connect(previewBtn, &QPushButton::clicked, this, &MainWindow::previewCommand);
+    connect(previewVideoBtn, &QPushButton::clicked, this, &MainWindow::previewVideoCommand);
     
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
             this, &MainWindow::updateFrameRateDisplay);
@@ -351,6 +361,7 @@ void MainWindow::selectOutputPath()
 
 void MainWindow::startConversion()
 {
+    std::cout << "Starting conversion..";
     if (isConverting) {
         converter->cancel();
         return;
@@ -392,7 +403,14 @@ void MainWindow::onConversionProgress(int percentage)
 void MainWindow::onConversionFinished(bool success, const QString &message)
 {
     progressBar->setVisible(false);
-    convertBtn->setText("Convert to Video");
+    
+    // Update button text based on current tab
+    if (tabWidget->currentIndex() == 0) {
+        convertBtn->setText("Convert to Video");
+    } else {
+        convertVideoBtn->setText("Convert to Image Sequence");
+    }
+    
     isConverting = false;
     
     logOutput->append(message);
@@ -457,6 +475,84 @@ void MainWindow::previewCommand()
     msgBox.setDetailedText(command);
     msgBox.setStyleSheet("QMessageBox { messagebox-text-interaction-flags: 5; }");
     msgBox.exec();
+}
+
+void MainWindow::previewVideoCommand()
+{
+    QString inputPath = videoInputEdit->text();
+    QString outputPath = seqOutputEdit->text();
+    
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input and output paths first.");
+        return;
+    }
+    
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.imageFormat = imageFormatCombo->currentText();
+    settings.startFrame = startFrameSpinBox->value();
+    settings.endFrame = endFrameSpinBox->value();
+    settings.extractAllFrames = extractAllFrames->isChecked();
+    
+    // Create a temporary converter to build the command
+    Converter tempConverter;
+    QString command = tempConverter.buildFFmpegCommand(settings, false);  // false for video to sequence
+    
+    // Show command in a dialog
+    QDialog dialog(this);
+    dialog.setWindowTitle("FFmpeg Command Preview");
+    dialog.setModal(true);
+    dialog.resize(600, 300);
+    
+    QVBoxLayout *layout = new QVBoxLayout(&dialog);
+    
+    QLabel *label = new QLabel("The following command will be executed:");
+    layout->addWidget(label);
+    
+    QTextEdit *textEdit = new QTextEdit();
+    textEdit->setPlainText(command);
+    textEdit->setReadOnly(true);
+    textEdit->setWordWrapMode(QTextOption::WrapAnywhere);
+    layout->addWidget(textEdit);
+    
+    QPushButton *okButton = new QPushButton("OK");
+    connect(okButton, &QPushButton::clicked, &dialog, &QDialog::accept);
+    layout->addWidget(okButton);
+    
+    dialog.exec();
+}
+
+void MainWindow::startVideoConversion()
+{
+    if (isConverting) {
+        converter->cancel();
+        return;
+    }
+    
+    QString inputPath = videoInputEdit->text();
+    QString outputPath = seqOutputEdit->text();
+    
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input and output paths.");
+        return;
+    }
+    
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.imageFormat = imageFormatCombo->currentText();
+    settings.startFrame = startFrameSpinBox->value();
+    settings.endFrame = endFrameSpinBox->value();
+    settings.extractAllFrames = extractAllFrames->isChecked();
+    
+    logOutput->clear();
+    progressBar->setVisible(true);
+    progressBar->setValue(0);
+    convertVideoBtn->setText("Cancel");
+    isConverting = true;
+    
+    converter->convertVideoToSequence(settings);
 }
 
 void MainWindow::updateUIForMode()

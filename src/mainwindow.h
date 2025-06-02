@@ -40,6 +40,8 @@ private slots:
     void updateFrameRateDisplay(int value);
     void updateQualityDisplay(int value);
     void previewCommand();
+    void previewVideoCommand();
+    void startVideoConversion();
 
 private:
     void setupUI();
@@ -61,6 +63,7 @@ private:
     QPushButton *outputBrowseBtn;
     QPushButton *convertBtn;
     QPushButton *previewBtn;
+    QPushButton *previewVideoBtn;
     QProgressBar *progressBar;
     QTextEdit *logOutput;
     
@@ -80,6 +83,11 @@ private:
     QSpinBox *startFrameSpinBox;
     QSpinBox *endFrameSpinBox;
     QCheckBox *extractAllFrames;
+    QLineEdit *videoInputEdit;
+    QLineEdit *seqOutputEdit;
+    QPushButton *videoBrowseBtn;
+    QPushButton *seqBrowseBtn;
+    QPushButton *convertVideoBtn;
     
     // Backend
     Converter *converter;
