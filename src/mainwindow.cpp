@@ -13,8 +13,8 @@ MainWindow::MainWindow(QWidget *parent)
     connectSignals();
     
     setWindowTitle("Image Sequence Converter");
-    setMinimumSize(800, 600);
-    resize(1000, 700);
+    setMinimumSize(600, 500);  // Reduced minimum width
+    resize(700, 600);          // Reduced default size
 }
 
 MainWindow::~MainWindow()
@@ -27,6 +27,7 @@ void MainWindow::setupUI()
     setCentralWidget(centralWidget);
     
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(10, 10, 10, 10);  // Add some padding
     
     // Create tab widget
     tabWidget = new QTabWidget(this);
@@ -44,7 +45,7 @@ void MainWindow::setupUI()
     QGroupBox *logGroup = new QGroupBox("Conversion Log", this);
     QVBoxLayout *logLayout = new QVBoxLayout(logGroup);
     logOutput = new QTextEdit(this);
-    logOutput->setMaximumHeight(150);
+    logOutput->setMaximumHeight(120);  // Slightly smaller
     logOutput->setReadOnly(true);
     logLayout->addWidget(logOutput);
     mainLayout->addWidget(logGroup);
@@ -56,82 +57,125 @@ void MainWindow::setupSequenceToVideoTab()
     tabWidget->addTab(seqToVideoTab, "Image Sequence → Video");
     
     QVBoxLayout *mainLayout = new QVBoxLayout(seqToVideoTab);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(10);
     
-    // Input/Output section
+    // Input/Output section - more compact
     QGroupBox *ioGroup = new QGroupBox("Input/Output", this);
-    QGridLayout *ioLayout = new QGridLayout(ioGroup);
+    QVBoxLayout *ioLayout = new QVBoxLayout(ioGroup);
+    ioLayout->setSpacing(8);
     
-    ioLayout->addWidget(new QLabel("Input Directory:"), 0, 0);
+    // Input row
+    QHBoxLayout *inputLayout = new QHBoxLayout();
+    inputLayout->addWidget(new QLabel("Input Directory:"));
     inputPathEdit = new QLineEdit(this);
     inputPathEdit->setPlaceholderText("Select folder containing image sequence...");
-    ioLayout->addWidget(inputPathEdit, 0, 1);
+    inputLayout->addWidget(inputPathEdit, 1);  // Stretch factor
     inputBrowseBtn = new QPushButton("Browse...", this);
-    ioLayout->addWidget(inputBrowseBtn, 0, 2);
+    inputBrowseBtn->setMaximumWidth(80);  // Limit button width
+    inputLayout->addWidget(inputBrowseBtn);
+    ioLayout->addLayout(inputLayout);
     
-    ioLayout->addWidget(new QLabel("Output Video:"), 1, 0);
+    // Output row
+    QHBoxLayout *outputLayout = new QHBoxLayout();
+    outputLayout->addWidget(new QLabel("Output Video:"));
     outputPathEdit = new QLineEdit(this);
     outputPathEdit->setPlaceholderText("Select output video file...");
-    ioLayout->addWidget(outputPathEdit, 1, 1);
+    outputLayout->addWidget(outputPathEdit, 1);  // Stretch factor
     outputBrowseBtn = new QPushButton("Browse...", this);
-    ioLayout->addWidget(outputBrowseBtn, 1, 2);
+    outputBrowseBtn->setMaximumWidth(80);  // Limit button width
+    outputLayout->addWidget(outputBrowseBtn);
+    ioLayout->addLayout(outputLayout);
     
     mainLayout->addWidget(ioGroup);
     
-    // Video settings
+    // Video settings - more compact arrangement
     QGroupBox *videoGroup = new QGroupBox("Video Settings", this);
-    QGridLayout *videoLayout = new QGridLayout(videoGroup);
+    QVBoxLayout *videoLayout = new QVBoxLayout(videoGroup);
+    videoLayout->setSpacing(8);
     
-    videoLayout->addWidget(new QLabel("Format:"), 0, 0);
+    // Format and Codec row
+    QHBoxLayout *formatRow = new QHBoxLayout();
+    formatRow->addWidget(new QLabel("Format:"));
     videoFormatCombo = new QComboBox(this);
     videoFormatCombo->addItems({"MP4", "AVI", "MOV", "MKV", "WebM"});
-    videoLayout->addWidget(videoFormatCombo, 0, 1);
+    videoFormatCombo->setMaximumWidth(100);
+    formatRow->addWidget(videoFormatCombo);
     
-    videoLayout->addWidget(new QLabel("Codec:"), 0, 2);
+    formatRow->addSpacing(20);  // Add some space
+    formatRow->addWidget(new QLabel("Codec:"));
     videoCodecCombo = new QComboBox(this);
     videoCodecCombo->addItems({"H.264", "H.265", "VP9", "ProRes"});
-    videoLayout->addWidget(videoCodecCombo, 0, 3);
+    videoCodecCombo->setMaximumWidth(100);
+    formatRow->addWidget(videoCodecCombo);
+    formatRow->addStretch();  // Push everything to the left
+    videoLayout->addLayout(formatRow);
     
-    videoLayout->addWidget(new QLabel("Frame Rate:"), 1, 0);
+    // Frame Rate and Quality row
+    QHBoxLayout *rateQualityRow = new QHBoxLayout();
+    rateQualityRow->addWidget(new QLabel("Frame Rate:"));
     frameRateSpinBox = new QSpinBox(this);
     frameRateSpinBox->setRange(1, 60);
     frameRateSpinBox->setValue(24);
-    videoLayout->addWidget(frameRateSpinBox, 1, 1);
+    frameRateSpinBox->setMaximumWidth(60);
+    rateQualityRow->addWidget(frameRateSpinBox);
     frameRateLabel = new QLabel("24 fps", this);
-    videoLayout->addWidget(frameRateLabel, 1, 2);
+    frameRateLabel->setMinimumWidth(50);
+    rateQualityRow->addWidget(frameRateLabel);
     
-    videoLayout->addWidget(new QLabel("Quality:"), 2, 0);
+    rateQualityRow->addSpacing(20);
+    rateQualityRow->addWidget(new QLabel("Quality:"));
     qualitySpinBox = new QSpinBox(this);
     qualitySpinBox->setRange(1, 51);
     qualitySpinBox->setValue(23);
-    videoLayout->addWidget(qualitySpinBox, 2, 1);
+    qualitySpinBox->setMaximumWidth(60);
+    rateQualityRow->addWidget(qualitySpinBox);
     qualityLabel = new QLabel("High (CRF 23)", this);
-    videoLayout->addWidget(qualityLabel, 2, 2);
+    qualityLabel->setMinimumWidth(100);
+    rateQualityRow->addWidget(qualityLabel);
+    rateQualityRow->addStretch();
+    videoLayout->addLayout(rateQualityRow);
     
-    videoLayout->addWidget(new QLabel("Width:"), 3, 0);
+    // Resolution row
+    QHBoxLayout *resolutionRow = new QHBoxLayout();
+    resolutionRow->addWidget(new QLabel("Width:"));
     widthSpinBox = new QSpinBox(this);
     widthSpinBox->setRange(1, 7680);
     widthSpinBox->setValue(1920);
     widthSpinBox->setSingleStep(2);
-    videoLayout->addWidget(widthSpinBox, 3, 1);
+    widthSpinBox->setMaximumWidth(80);
+    resolutionRow->addWidget(widthSpinBox);
     
-    videoLayout->addWidget(new QLabel("Height:"), 3, 2);
+    resolutionRow->addSpacing(10);
+    resolutionRow->addWidget(new QLabel("Height:"));
     heightSpinBox = new QSpinBox(this);
     heightSpinBox->setRange(1, 4320);
     heightSpinBox->setValue(1080);
     heightSpinBox->setSingleStep(2);
-    videoLayout->addWidget(heightSpinBox, 3, 3);
+    heightSpinBox->setMaximumWidth(80);
+    resolutionRow->addWidget(heightSpinBox);
     
+    resolutionRow->addSpacing(20);
     maintainAspectRatio = new QCheckBox("Maintain Aspect Ratio", this);
     maintainAspectRatio->setChecked(true);
-    videoLayout->addWidget(maintainAspectRatio, 4, 0, 1, 2);
+    resolutionRow->addWidget(maintainAspectRatio);
+    resolutionRow->addStretch();
+    videoLayout->addLayout(resolutionRow);
     
     mainLayout->addWidget(videoGroup);
     
     // Convert button
     convertBtn = new QPushButton("Convert to Video", this);
     convertBtn->setMinimumHeight(40);
+    convertBtn->setMaximumWidth(300);  // Limit button width
     convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
-    mainLayout->addWidget(convertBtn);
+    
+    // Center the button
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(convertBtn);
+    buttonLayout->addStretch();
+    mainLayout->addLayout(buttonLayout);
     
     mainLayout->addStretch();
 }
@@ -142,60 +186,92 @@ void MainWindow::setupVideoToSequenceTab()
     tabWidget->addTab(videoToSeqTab, "Video → Image Sequence");
     
     QVBoxLayout *mainLayout = new QVBoxLayout(videoToSeqTab);
+    mainLayout->setContentsMargins(10, 10, 10, 10);
+    mainLayout->setSpacing(10);
     
-    // Input/Output section for video tab
+    // Input/Output section for video tab - more compact
     QGroupBox *ioGroup = new QGroupBox("Input/Output", this);
-    QGridLayout *ioLayout = new QGridLayout(ioGroup);
+    QVBoxLayout *ioLayout = new QVBoxLayout(ioGroup);
+    ioLayout->setSpacing(8);
     
-    ioLayout->addWidget(new QLabel("Input Video:"), 0, 0);
+    // Video input row
+    QHBoxLayout *videoInputLayout = new QHBoxLayout();
+    videoInputLayout->addWidget(new QLabel("Input Video:"));
     QLineEdit *videoInputEdit = new QLineEdit(this);
     videoInputEdit->setPlaceholderText("Select video file...");
-    ioLayout->addWidget(videoInputEdit, 0, 1);
+    videoInputLayout->addWidget(videoInputEdit, 1);
     QPushButton *videoBrowseBtn = new QPushButton("Browse...", this);
-    ioLayout->addWidget(videoBrowseBtn, 0, 2);
+    videoBrowseBtn->setMaximumWidth(80);
+    videoInputLayout->addWidget(videoBrowseBtn);
+    ioLayout->addLayout(videoInputLayout);
     
-    ioLayout->addWidget(new QLabel("Output Directory:"), 1, 0);
+    // Sequence output row
+    QHBoxLayout *seqOutputLayout = new QHBoxLayout();
+    seqOutputLayout->addWidget(new QLabel("Output Directory:"));
     QLineEdit *seqOutputEdit = new QLineEdit(this);
     seqOutputEdit->setPlaceholderText("Select output directory...");
-    ioLayout->addWidget(seqOutputEdit, 1, 1);
+    seqOutputLayout->addWidget(seqOutputEdit, 1);
     QPushButton *seqBrowseBtn = new QPushButton("Browse...", this);
-    ioLayout->addWidget(seqBrowseBtn, 1, 2);
+    seqBrowseBtn->setMaximumWidth(80);
+    seqOutputLayout->addWidget(seqBrowseBtn);
+    ioLayout->addLayout(seqOutputLayout);
     
     mainLayout->addWidget(ioGroup);
     
-    // Image settings
+    // Image settings - more compact
     QGroupBox *imageGroup = new QGroupBox("Image Settings", this);
-    QGridLayout *imageLayout = new QGridLayout(imageGroup);
+    QVBoxLayout *imageLayout = new QVBoxLayout(imageGroup);
+    imageLayout->setSpacing(8);
     
-    imageLayout->addWidget(new QLabel("Format:"), 0, 0);
+    // Format row
+    QHBoxLayout *formatRow = new QHBoxLayout();
+    formatRow->addWidget(new QLabel("Format:"));
     imageFormatCombo = new QComboBox(this);
     imageFormatCombo->addItems({"PNG", "JPEG", "TIFF", "BMP", "EXR"});
-    imageLayout->addWidget(imageFormatCombo, 0, 1);
+    imageFormatCombo->setMaximumWidth(100);
+    formatRow->addWidget(imageFormatCombo);
+    formatRow->addStretch();
+    imageLayout->addLayout(formatRow);
     
+    // Extract all frames checkbox
     extractAllFrames = new QCheckBox("Extract All Frames", this);
     extractAllFrames->setChecked(true);
-    imageLayout->addWidget(extractAllFrames, 1, 0, 1, 2);
+    imageLayout->addWidget(extractAllFrames);
     
-    imageLayout->addWidget(new QLabel("Start Frame:"), 2, 0);
+    // Frame range row
+    QHBoxLayout *frameRangeRow = new QHBoxLayout();
+    frameRangeRow->addWidget(new QLabel("Start Frame:"));
     startFrameSpinBox = new QSpinBox(this);
     startFrameSpinBox->setRange(0, 999999);
     startFrameSpinBox->setEnabled(false);
-    imageLayout->addWidget(startFrameSpinBox, 2, 1);
+    startFrameSpinBox->setMaximumWidth(80);
+    frameRangeRow->addWidget(startFrameSpinBox);
     
-    imageLayout->addWidget(new QLabel("End Frame:"), 2, 2);
+    frameRangeRow->addSpacing(20);
+    frameRangeRow->addWidget(new QLabel("End Frame:"));
     endFrameSpinBox = new QSpinBox(this);
     endFrameSpinBox->setRange(0, 999999);
     endFrameSpinBox->setValue(100);
     endFrameSpinBox->setEnabled(false);
-    imageLayout->addWidget(endFrameSpinBox, 2, 3);
+    endFrameSpinBox->setMaximumWidth(80);
+    frameRangeRow->addWidget(endFrameSpinBox);
+    frameRangeRow->addStretch();
+    imageLayout->addLayout(frameRangeRow);
     
     mainLayout->addWidget(imageGroup);
     
     // Convert button
     QPushButton *convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
     convertVideoBtn->setMinimumHeight(40);
+    convertVideoBtn->setMaximumWidth(300);
     convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
-    mainLayout->addWidget(convertVideoBtn);
+    
+    // Center the button
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(convertVideoBtn);
+    buttonLayout->addStretch();
+    mainLayout->addLayout(buttonLayout);
     
     mainLayout->addStretch();
     
@@ -231,11 +307,16 @@ void MainWindow::connectSignals()
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
     
-    //connect(frameRateSpinBox, &QSlider::valueChanged, this, &MainWindow::updateFrameRateDisplay);
-    //connect(qualitySpinBox, &QSlider::valueChanged, this, &MainWindow::updateQualityDisplay);
+    connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &MainWindow::updateFrameRateDisplay);
+    connect(qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
+            this, &MainWindow::updateQualityDisplay);
     
     connect(converter, &Converter::progressChanged, this, &MainWindow::onConversionProgress);
     connect(converter, &Converter::finished, this, &MainWindow::onConversionFinished);
+    connect(converter, &Converter::logMessage, [this](const QString &message) {
+        logOutput->append(message);
+    });
 }
 
 void MainWindow::selectInputPath()
