@@ -53,7 +53,7 @@ private slots:
     void onProcessOutput();
 
 private:
-    QString buildFFmpegCommand(const ConversionSettings &settings, bool isSequenceToVideo);
+    QStringList buildFFmpegArguments(const ConversionSettings &settings, bool isSequenceToVideo);
     QString getVideoCodecName(const QString &codec);
     QString getVideoFormatExtension(const QString &format);
     QStringList findImageFiles(const QString &directory);

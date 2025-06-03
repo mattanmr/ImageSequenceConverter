@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QStandardPaths>
-#include <droplineedit.h>
+#include "droplineedit.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

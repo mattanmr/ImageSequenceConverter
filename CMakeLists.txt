@@ -21,6 +21,8 @@ set(SOURCES
     src/main.cpp
     src/mainwindow.cpp
     src/converter.cpp
+    src/droplineedit.cpp
+
 )
 
 # Header files
