@@ -27,7 +27,7 @@ bool Converter::isFFmpegAvailable()
     return !ffmpegPath.isEmpty();
 }
 
-QString Converter::findFFmpegPath()
+QString Converter::findFFmpegPath() const
 {
     // Check common installation paths
     QStringList possiblePaths = {
@@ -69,10 +69,10 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     
     totalFrames = imageFiles.size();
     
-    QString command = buildFFmpegCommand(settings, true);
-    
+    QStringList args = buildFFmpegArguments(settings, true);
+
     emit logMessage("Starting conversion...");
-    emit logMessage("Command: " + command);
+    emit logMessage("Command: " + ffmpegPath + " " + args.join(" "));
     
     ffmpegProcess = new QProcess(this);
     connect(ffmpegProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -81,7 +81,7 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     connect(ffmpegProcess, &QProcess::readyReadStandardError, this, &Converter::onProcessOutput);
     
     isProcessing = true;
-    ffmpegProcess->start(command);
+    ffmpegProcess->start(ffmpegPath, args);
 }
 
 void Converter::convertVideoToSequence(const ConversionSettings &settings)
@@ -98,10 +98,10 @@ void Converter::convertVideoToSequence(const ConversionSettings &settings)
     
     currentSettings = settings;
     
-    QString command = buildFFmpegCommand(settings, false);
+    QStringList args = buildFFmpegArguments(settings, false);
     
     emit logMessage("Starting video extraction...");
-    emit logMessage("Command: " + command);
+    emit logMessage("Command: " + ffmpegPath + " " + args.join(" "));
     
     ffmpegProcess = new QProcess(this);
     connect(ffmpegProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -110,28 +110,24 @@ void Converter::convertVideoToSequence(const ConversionSettings &settings)
     connect(ffmpegProcess, &QProcess::readyReadStandardError, this, &Converter::onProcessOutput);
     
     isProcessing = true;
-    ffmpegProcess->start(command);
+    ffmpegProcess->start(ffmpegPath, args);
 }
 
-QString Converter::buildFFmpegCommand(const ConversionSettings &settings, bool isSequenceToVideo)
+QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, bool isSequenceToVideo)
 {
     QStringList args;
-    args << ffmpegPath;
-    
+
     if (isSequenceToVideo) {
         // Image sequence to video
         QStringList imageFiles = findImageFiles(settings.inputPath);
         if (!imageFiles.isEmpty()) {
-            // Determine input pattern
-            QString firstFile = imageFiles.first();
-            QFileInfo fileInfo(firstFile);
+            QFileInfo fileInfo(imageFiles.first());
             QString baseName = fileInfo.baseName();
             QString extension = fileInfo.suffix();
-            
-            // Try to detect numbering pattern
+
             QRegularExpression numberPattern("(\\d+)$");
             QRegularExpressionMatch match = numberPattern.match(baseName);
-            
+
             QString inputPattern;
             if (match.hasMatch()) {
                 QString numberPart = match.captured(1);
@@ -139,54 +135,48 @@ QString Converter::buildFFmpegCommand(const ConversionSettings &settings, bool i
                 inputPattern = QDir(settings.inputPath).absoluteFilePath(
                     QString("%1%2.%3").arg(nameWithoutNumber).arg("%04d").arg(extension));
             } else {
-                // Fallback to generic pattern
                 inputPattern = QDir(settings.inputPath).absoluteFilePath(QString("*.%1").arg(extension));
             }
-            
+
             args << "-framerate" << QString::number(settings.frameRate);
             args << "-i" << inputPattern;
         }
-        
-        // Video codec
+
         QString codecName = getVideoCodecName(settings.videoCodec);
         args << "-c:v" << codecName;
-        
-        // Quality settings
+
         if (codecName.contains("libx264") || codecName.contains("libx265")) {
             args << "-crf" << QString::number(settings.quality);
         }
-        
-        // Resolution
+
         if (settings.maintainAspectRatio) {
             args << "-vf" << QString("scale=%1:%2:force_original_aspect_ratio=decrease,pad=%1:%2:(ow-iw)/2:(oh-ih)/2")
                              .arg(settings.width).arg(settings.height);
         } else {
             args << "-s" << QString("%1x%2").arg(settings.width).arg(settings.height);
         }
-        
-        // Output format
-        args << "-f" << settings.videoFormat;
-        args << "-y"; // Overwrite output file
+
+        args << "-f" << settings.videoFormat.toLower();
+        args << "-y";
         args << settings.outputPath;
-        
+
     } else {
-        // Video to image sequence
+        // Video to sequence
         args << "-i" << settings.inputPath;
-        
-        // Frame range
+
         if (!settings.extractAllFrames) {
             args << "-ss" << QString::number(settings.startFrame);
             args << "-frames:v" << QString::number(settings.endFrame - settings.startFrame + 1);
         }
-        
-        // Output pattern
+
         QString outputPattern = QDir(settings.outputPath).absoluteFilePath(
             QString("frame_%04d.%1").arg(settings.imageFormat.toLower()));
         args << outputPattern;
     }
-    
-    return args.join(" ");
+
+    return args;
 }
+
 
 QString Converter::getVideoCodecName(const QString &codec)
 {

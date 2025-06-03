@@ -39,6 +39,11 @@ private slots:
     void onConversionModeChanged();
     void updateFrameRateDisplay(int value);
     void updateQualityDisplay(int value);
+    void startVideoToSequenceConversion();
+    void showFFmpegCommandPreview();
+    void showVideoToSequenceCommandPreview();
+
+
 
 private:
     void setupUI();
@@ -78,6 +83,12 @@ private:
     QSpinBox *startFrameSpinBox;
     QSpinBox *endFrameSpinBox;
     QCheckBox *extractAllFrames;
+    QLineEdit *videoInputEdit;
+    QLineEdit *seqOutputEdit;
+    QPushButton *convertVideoBtn;
+    QLineEdit *commandPreviewEdit;
+    QPushButton *previewCmdBtn;
+
     
     // Backend
     Converter *converter;

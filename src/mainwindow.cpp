@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QStandardPaths>
+#include "droplineedit.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -40,6 +41,25 @@ void MainWindow::setupUI()
     progressBar = new QProgressBar(this);
     progressBar->setVisible(false);
     mainLayout->addWidget(progressBar);
+
+    // // Preview FFmpeg command
+    // QGroupBox *cmdGroup = new QGroupBox("FFmpeg Command Preview", this);
+    // QVBoxLayout *cmdLayout = new QVBoxLayout(cmdGroup);
+    // commandPreviewEdit = new QLineEdit(this);
+    // commandPreviewEdit->setReadOnly(true);
+    // cmdLayout->addWidget(commandPreviewEdit);
+    // mainLayout->addWidget(cmdGroup);
+    // previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    // previewCmdBtn->setMaximumWidth(300);
+    // previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+
+    // // Center it
+    // QHBoxLayout *previewLayout = new QHBoxLayout();
+    // previewLayout->addStretch();
+    // previewLayout->addWidget(previewCmdBtn);
+    // previewLayout->addStretch();
+    // mainLayout->addLayout(previewLayout);
+
     
     // Log output
     QGroupBox *logGroup = new QGroupBox("Conversion Log", this);
@@ -68,7 +88,7 @@ void MainWindow::setupSequenceToVideoTab()
     // Input row
     QHBoxLayout *inputLayout = new QHBoxLayout();
     inputLayout->addWidget(new QLabel("Input Directory:"));
-    inputPathEdit = new QLineEdit(this);
+    inputPathEdit = new DropLineEdit(this);
     inputPathEdit->setPlaceholderText("Select folder containing image sequence...");
     inputLayout->addWidget(inputPathEdit, 1);  // Stretch factor
     inputBrowseBtn = new QPushButton("Browse...", this);
@@ -79,7 +99,7 @@ void MainWindow::setupSequenceToVideoTab()
     // Output row
     QHBoxLayout *outputLayout = new QHBoxLayout();
     outputLayout->addWidget(new QLabel("Output Video:"));
-    outputPathEdit = new QLineEdit(this);
+    outputPathEdit = new DropLineEdit(this);
     outputPathEdit->setPlaceholderText("Select output video file...");
     outputLayout->addWidget(outputPathEdit, 1);  // Stretch factor
     outputBrowseBtn = new QPushButton("Browse...", this);
@@ -176,6 +196,17 @@ void MainWindow::setupSequenceToVideoTab()
     buttonLayout->addWidget(convertBtn);
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
+
+    previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    previewCmdBtn->setMaximumWidth(300);
+    previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+
+    // Center it
+    QHBoxLayout *previewLayout = new QHBoxLayout();
+    previewLayout->addStretch();
+    previewLayout->addWidget(previewCmdBtn);
+    previewLayout->addStretch();
+    mainLayout->addLayout(previewLayout);
     
     mainLayout->addStretch();
 }
@@ -197,7 +228,7 @@ void MainWindow::setupVideoToSequenceTab()
     // Video input row
     QHBoxLayout *videoInputLayout = new QHBoxLayout();
     videoInputLayout->addWidget(new QLabel("Input Video:"));
-    QLineEdit *videoInputEdit = new QLineEdit(this);
+    videoInputEdit = new DropLineEdit(this);
     videoInputEdit->setPlaceholderText("Select video file...");
     videoInputLayout->addWidget(videoInputEdit, 1);
     QPushButton *videoBrowseBtn = new QPushButton("Browse...", this);
@@ -208,7 +239,7 @@ void MainWindow::setupVideoToSequenceTab()
     // Sequence output row
     QHBoxLayout *seqOutputLayout = new QHBoxLayout();
     seqOutputLayout->addWidget(new QLabel("Output Directory:"));
-    QLineEdit *seqOutputEdit = new QLineEdit(this);
+    seqOutputEdit = new DropLineEdit(this);
     seqOutputEdit->setPlaceholderText("Select output directory...");
     seqOutputLayout->addWidget(seqOutputEdit, 1);
     QPushButton *seqBrowseBtn = new QPushButton("Browse...", this);
@@ -261,7 +292,7 @@ void MainWindow::setupVideoToSequenceTab()
     mainLayout->addWidget(imageGroup);
     
     // Convert button
-    QPushButton *convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
+    convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
     convertVideoBtn->setMinimumHeight(40);
     convertVideoBtn->setMaximumWidth(300);
     convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
@@ -272,11 +303,29 @@ void MainWindow::setupVideoToSequenceTab()
     buttonLayout->addWidget(convertVideoBtn);
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
+
+    QPushButton *previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    previewVideoCmdBtn->setMaximumWidth(300);
+    previewVideoCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+
+    // Center the button
+    QHBoxLayout *previewLayout = new QHBoxLayout();
+    previewLayout->addStretch();
+    previewLayout->addWidget(previewVideoCmdBtn);
+    previewLayout->addStretch();
+    mainLayout->addLayout(previewLayout);
+
+    connect(previewVideoCmdBtn, &QPushButton::clicked, this, &MainWindow::showVideoToSequenceCommandPreview);
+
+    videoInputEdit->setAcceptDrops(true);
+    inputPathEdit->setAcceptDrops(true);
+    seqOutputEdit->setAcceptDrops(true);
+    outputPathEdit->setAcceptDrops(true);
     
     mainLayout->addStretch();
     
     // Connect video tab signals
-    connect(videoBrowseBtn, &QPushButton::clicked, [this, videoInputEdit]() {
+    connect(videoBrowseBtn, &QPushButton::clicked, [this]() {
         QString fileName = QFileDialog::getOpenFileName(this, 
             "Select Video File", 
             QStandardPaths::writableLocation(QStandardPaths::MoviesLocation),
@@ -285,8 +334,8 @@ void MainWindow::setupVideoToSequenceTab()
             videoInputEdit->setText(fileName);
         }
     });
-    
-    connect(seqBrowseBtn, &QPushButton::clicked, [this, seqOutputEdit]() {
+
+    connect(seqBrowseBtn, &QPushButton::clicked, [this]() {
         QString dirName = QFileDialog::getExistingDirectory(this, 
             "Select Output Directory",
             QStandardPaths::writableLocation(QStandardPaths::PicturesLocation));
@@ -294,6 +343,7 @@ void MainWindow::setupVideoToSequenceTab()
             seqOutputEdit->setText(dirName);
         }
     });
+
     
     connect(extractAllFrames, &QCheckBox::toggled, [this](bool checked) {
         startFrameSpinBox->setEnabled(!checked);
@@ -306,6 +356,9 @@ void MainWindow::connectSignals()
     connect(inputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectInputPath);
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
+    connect(convertVideoBtn, &QPushButton::clicked, this, &MainWindow::startVideoToSequenceConversion);
+    connect(previewCmdBtn, &QPushButton::clicked, this, &MainWindow::showFFmpegCommandPreview);
+
     
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
             this, &MainWindow::updateFrameRateDisplay);
@@ -349,6 +402,12 @@ void MainWindow::startConversion()
     
     QString inputPath = inputPathEdit->text();
     QString outputPath = outputPathEdit->text();
+    QString extension = "." + videoFormatCombo->currentText().toLower();
+    if (!outputPath.endsWith(extension, Qt::CaseInsensitive)) {
+        outputPath += extension;
+        outputPathEdit->setText(outputPath); // Optionally update field
+    }
+
     
     if (inputPath.isEmpty() || outputPath.isEmpty()) {
         QMessageBox::warning(this, "Error", "Please select both input and output paths.");
@@ -375,6 +434,38 @@ void MainWindow::startConversion()
     converter->convertSequenceToVideo(settings);
 }
 
+void MainWindow::startVideoToSequenceConversion()
+{
+    if (isConverting) {
+        converter->cancel();
+        return;
+    }
+
+    QString inputVideo = videoInputEdit->text();
+    QString outputDir = seqOutputEdit->text();
+
+    if (inputVideo.isEmpty() || outputDir.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input video and output directory.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputVideo;
+    settings.outputPath = outputDir;
+    settings.imageFormat = imageFormatCombo->currentText();
+    settings.extractAllFrames = extractAllFrames->isChecked();
+    settings.startFrame = startFrameSpinBox->value();
+    settings.endFrame = endFrameSpinBox->value();
+
+    logOutput->clear();
+    progressBar->setVisible(true);
+    progressBar->setValue(0);
+    convertVideoBtn->setText("Cancel");
+    isConverting = true;
+
+    converter->convertVideoToSequence(settings);
+}
+
 void MainWindow::onConversionProgress(int percentage)
 {
     progressBar->setValue(percentage);
@@ -384,6 +475,9 @@ void MainWindow::onConversionFinished(bool success, const QString &message)
 {
     progressBar->setVisible(false);
     convertBtn->setText("Convert to Video");
+    if (convertVideoBtn) {
+        convertVideoBtn->setText("Convert to Image Sequence");
+    }
     isConverting = false;
     
     logOutput->append(message);
@@ -415,6 +509,57 @@ void MainWindow::updateQualityDisplay(int value)
     else quality = "Very Low";
     
     qualityLabel->setText(QString("%1 (CRF %2)").arg(quality).arg(value));
+}
+
+void MainWindow::showFFmpegCommandPreview()
+{
+    QString inputPath = inputPathEdit->text();
+    QString outputPath = outputPathEdit->text();
+
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please set both input and output paths.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.videoFormat = videoFormatCombo->currentText().toLower();
+    settings.videoCodec = videoCodecCombo->currentText();
+    settings.frameRate = frameRateSpinBox->value();
+    settings.quality = qualitySpinBox->value();
+    settings.width = widthSpinBox->value();
+    settings.height = heightSpinBox->value();
+    settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+
+    QStringList args = converter->buildFFmpegArguments(settings, true);
+    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+
+    QMessageBox::information(this, "FFmpeg Command Preview", command);
+}
+
+void MainWindow::showVideoToSequenceCommandPreview()
+{
+    QString inputVideo = videoInputEdit->text();
+    QString outputDir = seqOutputEdit->text();
+
+    if (inputVideo.isEmpty() || outputDir.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input video and output directory.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputVideo;
+    settings.outputPath = outputDir;
+    settings.imageFormat = imageFormatCombo->currentText();
+    settings.extractAllFrames = extractAllFrames->isChecked();
+    settings.startFrame = startFrameSpinBox->value();
+    settings.endFrame = endFrameSpinBox->value();
+
+    QStringList args = converter->buildFFmpegArguments(settings, false);
+    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+
+    QMessageBox::information(this, "FFmpeg Command Preview", command);
 }
 
 void MainWindow::updateUIForMode()
