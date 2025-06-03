@@ -27,7 +27,7 @@ bool Converter::isFFmpegAvailable()
     return !ffmpegPath.isEmpty();
 }
 
-QString Converter::findFFmpegPath()
+QString Converter::findFFmpegPath() const
 {
     // Check common installation paths
     QStringList possiblePaths = {

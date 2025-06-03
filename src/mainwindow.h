@@ -40,6 +40,9 @@ private slots:
     void updateFrameRateDisplay(int value);
     void updateQualityDisplay(int value);
     void startVideoToSequenceConversion();
+    void showFFmpegCommandPreview();
+    void showVideoToSequenceCommandPreview();
+
 
 
 private:
@@ -83,6 +86,8 @@ private:
     QLineEdit *videoInputEdit;
     QLineEdit *seqOutputEdit;
     QPushButton *convertVideoBtn;
+    QLineEdit *commandPreviewEdit;
+    QPushButton *previewCmdBtn;
 
     
     // Backend

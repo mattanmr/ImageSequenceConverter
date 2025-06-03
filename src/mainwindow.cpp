@@ -41,6 +41,25 @@ void MainWindow::setupUI()
     progressBar = new QProgressBar(this);
     progressBar->setVisible(false);
     mainLayout->addWidget(progressBar);
+
+    // // Preview FFmpeg command
+    // QGroupBox *cmdGroup = new QGroupBox("FFmpeg Command Preview", this);
+    // QVBoxLayout *cmdLayout = new QVBoxLayout(cmdGroup);
+    // commandPreviewEdit = new QLineEdit(this);
+    // commandPreviewEdit->setReadOnly(true);
+    // cmdLayout->addWidget(commandPreviewEdit);
+    // mainLayout->addWidget(cmdGroup);
+    // previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    // previewCmdBtn->setMaximumWidth(300);
+    // previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+
+    // // Center it
+    // QHBoxLayout *previewLayout = new QHBoxLayout();
+    // previewLayout->addStretch();
+    // previewLayout->addWidget(previewCmdBtn);
+    // previewLayout->addStretch();
+    // mainLayout->addLayout(previewLayout);
+
     
     // Log output
     QGroupBox *logGroup = new QGroupBox("Conversion Log", this);
@@ -177,6 +196,17 @@ void MainWindow::setupSequenceToVideoTab()
     buttonLayout->addWidget(convertBtn);
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
+
+    previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    previewCmdBtn->setMaximumWidth(300);
+    previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+
+    // Center it
+    QHBoxLayout *previewLayout = new QHBoxLayout();
+    previewLayout->addStretch();
+    previewLayout->addWidget(previewCmdBtn);
+    previewLayout->addStretch();
+    mainLayout->addLayout(previewLayout);
     
     mainLayout->addStretch();
 }
@@ -274,6 +304,19 @@ void MainWindow::setupVideoToSequenceTab()
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
 
+    QPushButton *previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    previewVideoCmdBtn->setMaximumWidth(300);
+    previewVideoCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+
+    // Center the button
+    QHBoxLayout *previewLayout = new QHBoxLayout();
+    previewLayout->addStretch();
+    previewLayout->addWidget(previewVideoCmdBtn);
+    previewLayout->addStretch();
+    mainLayout->addLayout(previewLayout);
+
+    connect(previewVideoCmdBtn, &QPushButton::clicked, this, &MainWindow::showVideoToSequenceCommandPreview);
+
     videoInputEdit->setAcceptDrops(true);
     inputPathEdit->setAcceptDrops(true);
     seqOutputEdit->setAcceptDrops(true);
@@ -314,6 +357,7 @@ void MainWindow::connectSignals()
     connect(outputBrowseBtn, &QPushButton::clicked, this, &MainWindow::selectOutputPath);
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
     connect(convertVideoBtn, &QPushButton::clicked, this, &MainWindow::startVideoToSequenceConversion);
+    connect(previewCmdBtn, &QPushButton::clicked, this, &MainWindow::showFFmpegCommandPreview);
 
     
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
@@ -358,6 +402,12 @@ void MainWindow::startConversion()
     
     QString inputPath = inputPathEdit->text();
     QString outputPath = outputPathEdit->text();
+    QString extension = "." + videoFormatCombo->currentText().toLower();
+    if (!outputPath.endsWith(extension, Qt::CaseInsensitive)) {
+        outputPath += extension;
+        outputPathEdit->setText(outputPath); // Optionally update field
+    }
+
     
     if (inputPath.isEmpty() || outputPath.isEmpty()) {
         QMessageBox::warning(this, "Error", "Please select both input and output paths.");
@@ -425,6 +475,9 @@ void MainWindow::onConversionFinished(bool success, const QString &message)
 {
     progressBar->setVisible(false);
     convertBtn->setText("Convert to Video");
+    if (convertVideoBtn) {
+        convertVideoBtn->setText("Convert to Image Sequence");
+    }
     isConverting = false;
     
     logOutput->append(message);
@@ -456,6 +509,57 @@ void MainWindow::updateQualityDisplay(int value)
     else quality = "Very Low";
     
     qualityLabel->setText(QString("%1 (CRF %2)").arg(quality).arg(value));
+}
+
+void MainWindow::showFFmpegCommandPreview()
+{
+    QString inputPath = inputPathEdit->text();
+    QString outputPath = outputPathEdit->text();
+
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please set both input and output paths.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.videoFormat = videoFormatCombo->currentText().toLower();
+    settings.videoCodec = videoCodecCombo->currentText();
+    settings.frameRate = frameRateSpinBox->value();
+    settings.quality = qualitySpinBox->value();
+    settings.width = widthSpinBox->value();
+    settings.height = heightSpinBox->value();
+    settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+
+    QStringList args = converter->buildFFmpegArguments(settings, true);
+    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+
+    QMessageBox::information(this, "FFmpeg Command Preview", command);
+}
+
+void MainWindow::showVideoToSequenceCommandPreview()
+{
+    QString inputVideo = videoInputEdit->text();
+    QString outputDir = seqOutputEdit->text();
+
+    if (inputVideo.isEmpty() || outputDir.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please select both input video and output directory.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputVideo;
+    settings.outputPath = outputDir;
+    settings.imageFormat = imageFormatCombo->currentText();
+    settings.extractAllFrames = extractAllFrames->isChecked();
+    settings.startFrame = startFrameSpinBox->value();
+    settings.endFrame = endFrameSpinBox->value();
+
+    QStringList args = converter->buildFFmpegArguments(settings, false);
+    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+
+    QMessageBox::information(this, "FFmpeg Command Preview", command);
 }
 
 void MainWindow::updateUIForMode()
