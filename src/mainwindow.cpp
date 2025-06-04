@@ -470,20 +470,23 @@ void MainWindow::startVideoToSequenceConversion()
     settings.startFrame = startFrameSpinBox->value();
     settings.endFrame = endFrameSpinBox->value();
 
-    logOutput->clear();
-    progressBar->setVisible(true);
-    progressBar->setValue(0);
-    convertVideoBtn->setText("Cancel");
-    isConverting = true;
-
-    QStringList args = converter->buildFFmpegArguments(settings, true);
+    // Build the command preview with correct parameters for video-to-sequence
+    QStringList args = converter->buildFFmpegArguments(settings, false);  // false for video-to-sequence
     
     EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
     if (dlg.exec() == QDialog::Accepted) {
         QString edited = dlg.getCommand();
         settings.customCommand = edited;
+    } else {
+        // User cancelled the dialog
+        return;
     }
 
+    logOutput->clear();
+    progressBar->setVisible(true);
+    progressBar->setValue(0);
+    convertVideoBtn->setText("Cancel");
+    isConverting = true;
 
     converter->convertVideoToSequence(settings);
 }

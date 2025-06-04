@@ -60,6 +60,22 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     
     currentSettings = settings;
     
+    // Check for custom command first
+    if (!settings.customCommand.isEmpty()) {
+        emit logMessage("Running custom FFmpeg command:");
+        emit logMessage(settings.customCommand);
+        
+        ffmpegProcess = new QProcess(this);
+        connect(ffmpegProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, &Converter::onProcessFinished);
+        connect(ffmpegProcess, &QProcess::errorOccurred, this, &Converter::onProcessError);
+        connect(ffmpegProcess, &QProcess::readyReadStandardError, this, &Converter::onProcessOutput);
+        
+        isProcessing = true;
+        ffmpegProcess->start(settings.customCommand);
+        return;
+    }
+    
     // Find image files in the directory
     QStringList imageFiles = findImageFiles(settings.inputPath);
     if (imageFiles.isEmpty()) {
@@ -68,13 +84,6 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     }
     
     totalFrames = imageFiles.size();
-
-    if (!settings.customCommand.isEmpty()) {
-    emit logMessage("Running custom FFmpeg command:");
-    emit logMessage(settings.customCommand);
-    ffmpegProcess->start(settings.customCommand);
-    return;
-    }
     
     QStringList args = buildFFmpegArguments(settings, true);
 
@@ -105,11 +114,20 @@ void Converter::convertVideoToSequence(const ConversionSettings &settings)
     
     currentSettings = settings;
 
+    // Check for custom command first
     if (!settings.customCommand.isEmpty()) {
-    emit logMessage("Running custom FFmpeg command:");
-    emit logMessage(settings.customCommand);
-    ffmpegProcess->start(settings.customCommand);
-    return;
+        emit logMessage("Running custom FFmpeg command:");
+        emit logMessage(settings.customCommand);
+        
+        ffmpegProcess = new QProcess(this);
+        connect(ffmpegProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, &Converter::onProcessFinished);
+        connect(ffmpegProcess, &QProcess::errorOccurred, this, &Converter::onProcessError);
+        connect(ffmpegProcess, &QProcess::readyReadStandardError, this, &Converter::onProcessOutput);
+        
+        isProcessing = true;
+        ffmpegProcess->start(settings.customCommand);
+        return;
     }
     
     QStringList args = buildFFmpegArguments(settings, false);
@@ -190,7 +208,6 @@ QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, 
 
     return args;
 }
-
 
 QString Converter::getVideoCodecName(const QString &codec)
 {
