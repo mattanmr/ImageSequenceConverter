@@ -22,6 +22,8 @@ set(SOURCES
     src/mainwindow.cpp
     src/converter.cpp
     src/droplineedit.cpp
+    src/presetmanager.cpp
+    src/editablecommanddialog.cpp
 
 )
 
@@ -29,6 +31,9 @@ set(SOURCES
 set(HEADERS
     src/mainwindow.h
     src/converter.h
+    src/presetmanager.h
+    src/editablecommanddialog.h
+
 )
 
 # Create the executable
