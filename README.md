@@ -32,15 +32,16 @@ A macOS application for converting between image sequences and videos, built wit
 ```bash
 chmod +x build_and_run.sh
 ./build_and_run.sh
+```
 
 ## Manual Setup
-
+```
 brew install qt6 cmake ffmpeg
 mkdir build && cd build
 cmake .. -DCMAKE_PREFIX_PATH=$(brew --prefix qt6)
 make -j$(sysctl -n hw.ncpu)
 open ImageSequenceConverter.app
-
+```
 
 ## Project Structure
 
