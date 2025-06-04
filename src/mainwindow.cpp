@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QStandardPaths>
+#include <QInputDialog>
 #include "droplineedit.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -596,7 +597,18 @@ void MainWindow::saveCurrentPreset() {
     QString name = QInputDialog::getText(this, "Save Preset", "Enter preset name:", QLineEdit::Normal, "", &ok);
     if (!ok || name.isEmpty()) return;
 
-    ConversionSettings s = /* collect settings from UI */;
+    ConversionSettings s;
+    s.inputPath = inputPathEdit->text();
+    s.outputPath = outputPathEdit->text();
+    s.videoFormat = videoFormatCombo->currentText().toLower();
+    s.videoCodec = videoCodecCombo->currentText();
+    s.frameRate = frameRateSpinBox->value();
+    s.quality = qualitySpinBox->value();
+    s.width = widthSpinBox->value();
+    s.height = heightSpinBox->value();
+    s.maintainAspectRatio = maintainAspectRatio->isChecked();
+    // fill any additional fields if needed (e.g., imageFormat)
+
     presetManager->savePreset(name, s);
     refreshPresetList();
 }
