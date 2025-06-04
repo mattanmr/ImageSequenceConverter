@@ -40,6 +40,7 @@ public:
     
     void convertSequenceToVideo(const ConversionSettings &settings);
     void convertVideoToSequence(const ConversionSettings &settings);
+
     void cancel();
     
     bool isFFmpegAvailable();
