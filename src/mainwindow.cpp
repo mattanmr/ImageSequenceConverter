@@ -476,6 +476,7 @@ void MainWindow::startVideoToSequenceConversion()
     isConverting = true;
 
     QStringList args = converter->buildFFmpegArguments(settings, true);
+    
     EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
     if (dlg.exec() == QDialog::Accepted) {
         QString edited = dlg.getCommand();
