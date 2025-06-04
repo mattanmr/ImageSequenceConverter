@@ -26,9 +26,9 @@ A macOS application for converting between image sequences and videos, built wit
 - macOS 15.5 or later (Intel or Apple Silicon)
 - Dependencies: Qt6, FFmpeg, CMake
 
-## Installation
+### Installation
 
-### Recommended: One-Line Setup
+## Recommended: One-Line Setup
 ```bash
 chmod +x build_and_run.sh
 ./build_and_run.sh
@@ -42,16 +42,6 @@ cmake .. -DCMAKE_PREFIX_PATH=$(brew --prefix qt6)
 make -j$(sysctl -n hw.ncpu)
 open ImageSequenceConverter.app
 ```
-
-## Project Structure
-
-ImageSequenceConverter/
-├── mainwindow.*        # UI
-├── converter.*         # FFmpeg logic
-├── main.cpp            # App entry
-├── droplineedit.*      # Drag-and-drop widgets
-├── CMakeLists.txt
-└── build_and_run.sh
 
 ## License
 MIT License
