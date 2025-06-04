@@ -16,6 +16,10 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("Image Sequence Converter");
     setMinimumSize(600, 500);  // Reduced minimum width
     resize(700, 600);          // Reduced default size
+
+    presetManager = new PresetManager(this);
+    refreshPresetList();
+
 }
 
 MainWindow::~MainWindow()
@@ -42,23 +46,19 @@ void MainWindow::setupUI()
     progressBar->setVisible(false);
     mainLayout->addWidget(progressBar);
 
-    // // Preview FFmpeg command
-    // QGroupBox *cmdGroup = new QGroupBox("FFmpeg Command Preview", this);
-    // QVBoxLayout *cmdLayout = new QVBoxLayout(cmdGroup);
-    // commandPreviewEdit = new QLineEdit(this);
-    // commandPreviewEdit->setReadOnly(true);
-    // cmdLayout->addWidget(commandPreviewEdit);
-    // mainLayout->addWidget(cmdGroup);
-    // previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
-    // previewCmdBtn->setMaximumWidth(300);
-    // previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+    QHBoxLayout *presetLayout = new QHBoxLayout();
+    presetSelector = new QComboBox(this);
+    presetSelector->setMinimumWidth(200);
+    savePresetBtn = new QPushButton("Save Preset", this);
+    loadPresetBtn = new QPushButton("Load Preset", this);
+    deletePresetBtn = new QPushButton("Delete Preset", this);
 
-    // // Center it
-    // QHBoxLayout *previewLayout = new QHBoxLayout();
-    // previewLayout->addStretch();
-    // previewLayout->addWidget(previewCmdBtn);
-    // previewLayout->addStretch();
-    // mainLayout->addLayout(previewLayout);
+    presetLayout->addWidget(presetSelector);
+    presetLayout->addWidget(savePresetBtn);
+    presetLayout->addWidget(loadPresetBtn);
+    presetLayout->addWidget(deletePresetBtn);
+    mainLayout->addLayout(presetLayout);
+
 
     
     // Log output
@@ -370,6 +370,11 @@ void MainWindow::connectSignals()
     connect(converter, &Converter::logMessage, [this](const QString &message) {
         logOutput->append(message);
     });
+
+    connect(savePresetBtn, &QPushButton::clicked, this, &MainWindow::saveCurrentPreset);
+    connect(loadPresetBtn, &QPushButton::clicked, this, &MainWindow::loadSelectedPreset);
+    connect(deletePresetBtn, &QPushButton::clicked, this, &MainWindow::deleteSelectedPreset);
+
 }
 
 void MainWindow::selectInputPath()
@@ -430,7 +435,14 @@ void MainWindow::startConversion()
     progressBar->setValue(0);
     convertBtn->setText("Cancel");
     isConverting = true;
-    
+
+    QStringList args = converter->buildFFmpegArguments(settings, true);
+    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
+    if (dlg.exec() == QDialog::Accepted) {
+        QString edited = dlg.getCommand();
+        settings.customCommand = edited;
+    }
+
     converter->convertSequenceToVideo(settings);
 }
 
@@ -462,6 +474,14 @@ void MainWindow::startVideoToSequenceConversion()
     progressBar->setValue(0);
     convertVideoBtn->setText("Cancel");
     isConverting = true;
+
+    QStringList args = converter->buildFFmpegArguments(settings, true);
+    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
+    if (dlg.exec() == QDialog::Accepted) {
+        QString edited = dlg.getCommand();
+        settings.customCommand = edited;
+    }
+
 
     converter->convertVideoToSequence(settings);
 }
@@ -561,6 +581,59 @@ void MainWindow::showVideoToSequenceCommandPreview()
 
     QMessageBox::information(this, "FFmpeg Command Preview", command);
 }
+
+void MainWindow::refreshPresetList() {
+    presetSelector->clear();
+    auto presets = presetManager->loadPresets();
+    for (const auto &pair : presets) {
+        presetSelector->addItem(pair.first);
+    }
+}
+
+void MainWindow::saveCurrentPreset() {
+    bool ok;
+    QString name = QInputDialog::getText(this, "Save Preset", "Enter preset name:", QLineEdit::Normal, "", &ok);
+    if (!ok || name.isEmpty()) return;
+
+    ConversionSettings s = /* collect settings from UI */;
+    presetManager->savePreset(name, s);
+    refreshPresetList();
+}
+
+void MainWindow::loadSelectedPreset() {
+    QString name = presetSelector->currentText();
+    if (name.isEmpty()) return;
+
+    auto presets = presetManager->loadPresets();
+    for (const auto &pair : presets) {
+        if (pair.first == name) {
+            const ConversionSettings &s = pair.second;
+            // populate UI from s
+            inputPathEdit->setText(s.inputPath);
+            outputPathEdit->setText(s.outputPath);
+            videoFormatCombo->setCurrentText(s.videoFormat);
+            videoCodecCombo->setCurrentText(s.videoCodec);
+            frameRateSpinBox->setValue(s.frameRate);
+            qualitySpinBox->setValue(s.quality);
+            widthSpinBox->setValue(s.width);
+            heightSpinBox->setValue(s.height);
+            maintainAspectRatio->setChecked(s.maintainAspectRatio);
+            // other fields as needed
+            break;
+        }
+    }
+}
+
+void MainWindow::deleteSelectedPreset() {
+    QString name = presetSelector->currentText();
+    if (name.isEmpty()) return;
+
+    if (QMessageBox::question(this, "Delete Preset", "Are you sure you want to delete this preset?") == QMessageBox::Yes) {
+        presetManager->removePreset(name);
+        refreshPresetList();
+    }
+}
+
 
 void MainWindow::updateUIForMode()
 {

@@ -68,6 +68,13 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     }
     
     totalFrames = imageFiles.size();
+
+    if (!settings.customCommand.isEmpty()) {
+    emit logMessage("Running custom FFmpeg command:");
+    emit logMessage(settings.customCommand);
+    ffmpegProcess->start(settings.customCommand);
+    return;
+    }
     
     QStringList args = buildFFmpegArguments(settings, true);
 
@@ -97,6 +104,13 @@ void Converter::convertVideoToSequence(const ConversionSettings &settings)
     }
     
     currentSettings = settings;
+
+    if (!settings.customCommand.isEmpty()) {
+    emit logMessage("Running custom FFmpeg command:");
+    emit logMessage(settings.customCommand);
+    ffmpegProcess->start(settings.customCommand);
+    return;
+    }
     
     QStringList args = buildFFmpegArguments(settings, false);
     

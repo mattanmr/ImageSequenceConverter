@@ -21,6 +21,8 @@
 #include <QCheckBox>
 #include <QSlider>
 #include "converter.h"
+#include "presetmanager.h"
+#include "editablecommanddialog.h"
 
 class MainWindow : public QMainWindow
 {
@@ -42,6 +44,11 @@ private slots:
     void startVideoToSequenceConversion();
     void showFFmpegCommandPreview();
     void showVideoToSequenceCommandPreview();
+    void saveCurrentPreset();
+    void loadSelectedPreset();
+    void deleteSelectedPreset();
+    void refreshPresetList();
+
 
 
 
@@ -88,6 +95,14 @@ private:
     QPushButton *convertVideoBtn;
     QLineEdit *commandPreviewEdit;
     QPushButton *previewCmdBtn;
+
+    // Preset controls
+    QPushButton *savePresetBtn;
+    QPushButton *loadPresetBtn;
+    QPushButton *deletePresetBtn;
+    QComboBox *presetSelector;
+
+    PresetManager *presetManager;
 
     
     // Backend

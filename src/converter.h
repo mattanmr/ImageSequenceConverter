@@ -26,6 +26,8 @@ struct ConversionSettings {
     int startFrame;
     int endFrame;
     bool extractAllFrames;
+
+    QString customCommand; // optional raw ffmpeg command
 };
 
 class Converter : public QObject

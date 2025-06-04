@@ -76,6 +76,7 @@ QJsonObject PresetManager::settingsToJson(const ConversionSettings &s) const {
     o["endFrame"] = s.endFrame;
     o["extractAllFrames"] = s.extractAllFrames;
     o["customCommand"] = s.customCommand;
+    s.customCommand = o["customCommand"].toString();
     return o;
 }
 
