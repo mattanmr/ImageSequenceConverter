@@ -56,9 +56,14 @@ else
     print_success "Homebrew is already installed."
 fi
 
-# Update Homebrew
-print_status "Updating Homebrew..."
-brew update
+read -p "Update Homebrew $foo? [y/n]" answer
+if [[ $answer = y ]] ; then
+  # Update Homebrew
+    print_status "Updating Homebrew..."
+    brew update
+else
+    print_status "Skipping Hombrew update"
+fi
 
 # Install Qt6 if not already installed
 if ! brew list qt6 &> /dev/null; then
