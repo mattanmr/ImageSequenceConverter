@@ -1,6 +1,6 @@
 # Image Sequence Converter
 
-A macOS application for converting between image sequences and videos, built with Qt6 and FFmpeg.
+A macOS and Windows application for converting between image sequences and videos, built with Qt6 and FFmpeg.
 
 ## Features
 
@@ -23,8 +23,9 @@ A macOS application for converting between image sequences and videos, built wit
 
 ## Requirements
 
-- macOS 15.5 or later (Intel or Apple Silicon)
+- macOS 15.5 or later (Intel or Apple Silicon) / Windows 10 or later
 - Dependencies: Qt6, FFmpeg, CMake
+- NMake (comes with Visual Studio Build Tools) - for Windows
 
 ### Installation
 
@@ -41,6 +42,28 @@ mkdir build && cd build
 cmake .. -DCMAKE_PREFIX_PATH=$(brew --prefix qt6)
 make -j$(sysctl -n hw.ncpu)
 open ImageSequenceConverter.app
+```
+
+## Windows Build & Run
+
+### Requirements
+- Windows 10 or later
+- Qt6, CMake, FFmpeg (all must be in your PATH)
+- NMake (comes with Visual Studio Build Tools)
+
+### One-Line Setup (Windows)
+```bat
+build_and_run_windows.bat
+```
+
+### Manual Setup (Windows)
+```bat
+REM Open a Visual Studio Developer Command Prompt
+mkdir build
+cd build
+cmake .. -G "NMake Makefiles"
+nmake
+start ImageSequenceConverter.exe
 ```
 
 ## License
