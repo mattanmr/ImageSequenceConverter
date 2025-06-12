@@ -5,7 +5,12 @@
 PresetManager::PresetManager(QObject *parent) : QObject(parent) {}
 
 QString PresetManager::presetFolder() const {
-    QString dir = QCoreApplication::applicationDirPath() + "/presets";
+    // Store presets at the project root directory, even when running from inside an app bundle
+    QDir appDir(QCoreApplication::applicationDirPath());
+    appDir.cdUp(); // Go up from .../ImageSequenceConverter.app/Contents/MacOS to .../ImageSequenceConverter.app/Contents
+    appDir.cdUp(); // Go up to .../ImageSequenceConverter.app
+    appDir.cdUp(); // Go up to project root
+    QString dir = appDir.absolutePath() + "/presets";
     QDir().mkpath(dir);
     return dir;
 }
