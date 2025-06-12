@@ -1,11 +1,17 @@
 #include "presetmanager.h"
+#include <QCoreApplication>
+#include <QDir>
 
 PresetManager::PresetManager(QObject *parent) : QObject(parent) {}
 
-QString PresetManager::presetFilePath() const {
-    QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+QString PresetManager::presetFolder() const {
+    QString dir = QCoreApplication::applicationDirPath() + "/presets";
     QDir().mkpath(dir);
-    return dir + "/presets.json";
+    return dir;
+}
+
+QString PresetManager::presetFilePath() const {
+    return presetFolder() + "/presets.json";
 }
 
 void PresetManager::savePreset(const QString &name, const ConversionSettings &settings) {

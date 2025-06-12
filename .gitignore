@@ -4,3 +4,4 @@ CMakeFiles/
 *.cmake
 .DS_Store
 *.dSYM
+presets/
