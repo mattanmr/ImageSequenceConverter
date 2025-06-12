@@ -22,6 +22,7 @@ public:
 
 private:
     QString presetFilePath() const;
+    QString presetFolder() const;
     QJsonObject settingsToJson(const ConversionSettings &settings) const;
     ConversionSettings jsonToSettings(const QJsonObject &obj) const;
 };
