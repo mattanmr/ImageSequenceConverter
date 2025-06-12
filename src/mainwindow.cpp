@@ -4,6 +4,9 @@
 #include <QDir>
 #include <QStandardPaths>
 #include "droplineedit.h"
+#include "presetmanager.h"
+#include "editablecommanddialog.h"
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -12,10 +15,11 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUI();
     connectSignals();
-    
     setWindowTitle("Image Sequence Converter");
-    setMinimumSize(600, 500);  // Reduced minimum width
-    resize(700, 600);          // Reduced default size
+    setMinimumSize(600, 500);
+    resize(700, 600);
+    presetManager = new PresetManager(this);
+    refreshPresetList();
 }
 
 MainWindow::~MainWindow()
@@ -26,15 +30,13 @@ void MainWindow::setupUI()
 {
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
-    
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    mainLayout->setContentsMargins(10, 10, 10, 10);  // Add some padding
+    mainLayout->setContentsMargins(10, 10, 10, 10);
     
     // Create tab widget
     tabWidget = new QTabWidget(this);
     setupSequenceToVideoTab();
     setupVideoToSequenceTab();
-    
     mainLayout->addWidget(tabWidget);
     
     // Progress bar
@@ -42,30 +44,24 @@ void MainWindow::setupUI()
     progressBar->setVisible(false);
     mainLayout->addWidget(progressBar);
 
-    // // Preview FFmpeg command
-    // QGroupBox *cmdGroup = new QGroupBox("FFmpeg Command Preview", this);
-    // QVBoxLayout *cmdLayout = new QVBoxLayout(cmdGroup);
-    // commandPreviewEdit = new QLineEdit(this);
-    // commandPreviewEdit->setReadOnly(true);
-    // cmdLayout->addWidget(commandPreviewEdit);
-    // mainLayout->addWidget(cmdGroup);
-    // previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
-    // previewCmdBtn->setMaximumWidth(300);
-    // previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
-
-    // // Center it
-    // QHBoxLayout *previewLayout = new QHBoxLayout();
-    // previewLayout->addStretch();
-    // previewLayout->addWidget(previewCmdBtn);
-    // previewLayout->addStretch();
-    // mainLayout->addLayout(previewLayout);
-
+    // Preset controls
+    QHBoxLayout *presetLayout = new QHBoxLayout();
+    presetSelector = new QComboBox(this);
+    presetSelector->setMinimumWidth(200);
+    savePresetBtn = new QPushButton("Save Preset", this);
+    loadPresetBtn = new QPushButton("Load Preset", this);
+    deletePresetBtn = new QPushButton("Delete Preset", this);
+    presetLayout->addWidget(presetSelector);
+    presetLayout->addWidget(savePresetBtn);
+    presetLayout->addWidget(loadPresetBtn);
+    presetLayout->addWidget(deletePresetBtn);
+    mainLayout->addLayout(presetLayout);
     
     // Log output
     QGroupBox *logGroup = new QGroupBox("Conversion Log", this);
     QVBoxLayout *logLayout = new QVBoxLayout(logGroup);
     logOutput = new QTextEdit(this);
-    logOutput->setMaximumHeight(120);  // Slightly smaller
+    logOutput->setMaximumHeight(120);
     logOutput->setReadOnly(true);
     logLayout->addWidget(logOutput);
     mainLayout->addWidget(logGroup);
@@ -358,18 +354,14 @@ void MainWindow::connectSignals()
     connect(convertBtn, &QPushButton::clicked, this, &MainWindow::startConversion);
     connect(convertVideoBtn, &QPushButton::clicked, this, &MainWindow::startVideoToSequenceConversion);
     connect(previewCmdBtn, &QPushButton::clicked, this, &MainWindow::showFFmpegCommandPreview);
-
-    
-    connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
-            this, &MainWindow::updateFrameRateDisplay);
-    connect(qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), 
-            this, &MainWindow::updateQualityDisplay);
-    
+    connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::updateFrameRateDisplay);
+    connect(qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::updateQualityDisplay);
     connect(converter, &Converter::progressChanged, this, &MainWindow::onConversionProgress);
     connect(converter, &Converter::finished, this, &MainWindow::onConversionFinished);
-    connect(converter, &Converter::logMessage, [this](const QString &message) {
-        logOutput->append(message);
-    });
+    connect(converter, &Converter::logMessage, [this](const QString &message) { logOutput->append(message); });
+    connect(savePresetBtn, &QPushButton::clicked, this, &MainWindow::saveCurrentPreset);
+    connect(loadPresetBtn, &QPushButton::clicked, this, &MainWindow::loadSelectedPreset);
+    connect(deletePresetBtn, &QPushButton::clicked, this, &MainWindow::deleteSelectedPreset);
 }
 
 void MainWindow::selectInputPath()
@@ -399,21 +391,17 @@ void MainWindow::startConversion()
         converter->cancel();
         return;
     }
-    
     QString inputPath = inputPathEdit->text();
     QString outputPath = outputPathEdit->text();
     QString extension = "." + videoFormatCombo->currentText().toLower();
     if (!outputPath.endsWith(extension, Qt::CaseInsensitive)) {
         outputPath += extension;
-        outputPathEdit->setText(outputPath); // Optionally update field
+        outputPathEdit->setText(outputPath);
     }
-
-    
     if (inputPath.isEmpty() || outputPath.isEmpty()) {
         QMessageBox::warning(this, "Error", "Please select both input and output paths.");
         return;
     }
-    
     ConversionSettings settings;
     settings.inputPath = inputPath;
     settings.outputPath = outputPath;
@@ -424,13 +412,17 @@ void MainWindow::startConversion()
     settings.width = widthSpinBox->value();
     settings.height = heightSpinBox->value();
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
-    
     logOutput->clear();
     progressBar->setVisible(true);
     progressBar->setValue(0);
     convertBtn->setText("Cancel");
     isConverting = true;
-    
+    QStringList args = converter->buildFFmpegArguments(settings, true);
+    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
+    if (dlg.exec() == QDialog::Accepted) {
+        QString edited = dlg.getCommand();
+        settings.customCommand = edited;
+    }
     converter->convertSequenceToVideo(settings);
 }
 
@@ -440,15 +432,12 @@ void MainWindow::startVideoToSequenceConversion()
         converter->cancel();
         return;
     }
-
     QString inputVideo = videoInputEdit->text();
     QString outputDir = seqOutputEdit->text();
-
     if (inputVideo.isEmpty() || outputDir.isEmpty()) {
         QMessageBox::warning(this, "Error", "Please select both input video and output directory.");
         return;
     }
-
     ConversionSettings settings;
     settings.inputPath = inputVideo;
     settings.outputPath = outputDir;
@@ -456,13 +445,19 @@ void MainWindow::startVideoToSequenceConversion()
     settings.extractAllFrames = extractAllFrames->isChecked();
     settings.startFrame = startFrameSpinBox->value();
     settings.endFrame = endFrameSpinBox->value();
-
+    QStringList args = converter->buildFFmpegArguments(settings, false);
+    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
+    if (dlg.exec() == QDialog::Accepted) {
+        QString edited = dlg.getCommand();
+        settings.customCommand = edited;
+    } else {
+        return;
+    }
     logOutput->clear();
     progressBar->setVisible(true);
     progressBar->setValue(0);
     convertVideoBtn->setText("Cancel");
     isConverting = true;
-
     converter->convertVideoToSequence(settings);
 }
 
@@ -560,6 +555,62 @@ void MainWindow::showVideoToSequenceCommandPreview()
     QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
 
     QMessageBox::information(this, "FFmpeg Command Preview", command);
+}
+
+void MainWindow::refreshPresetList() {
+    presetSelector->clear();
+    auto presets = presetManager->loadPresets();
+    for (const auto &pair : presets) {
+        presetSelector->addItem(pair.first);
+    }
+}
+
+void MainWindow::saveCurrentPreset() {
+    bool ok;
+    QString name = QInputDialog::getText(this, "Save Preset", "Enter preset name:", QLineEdit::Normal, "", &ok);
+    if (!ok || name.isEmpty()) return;
+    ConversionSettings s;
+    s.inputPath = inputPathEdit->text();
+    s.outputPath = outputPathEdit->text();
+    s.videoFormat = videoFormatCombo->currentText().toLower();
+    s.videoCodec = videoCodecCombo->currentText();
+    s.frameRate = frameRateSpinBox->value();
+    s.quality = qualitySpinBox->value();
+    s.width = widthSpinBox->value();
+    s.height = heightSpinBox->value();
+    s.maintainAspectRatio = maintainAspectRatio->isChecked();
+    presetManager->savePreset(name, s);
+    refreshPresetList();
+}
+
+void MainWindow::loadSelectedPreset() {
+    QString name = presetSelector->currentText();
+    if (name.isEmpty()) return;
+    auto presets = presetManager->loadPresets();
+    for (const auto &pair : presets) {
+        if (pair.first == name) {
+            const ConversionSettings &s = pair.second;
+            inputPathEdit->setText(s.inputPath);
+            outputPathEdit->setText(s.outputPath);
+            videoFormatCombo->setCurrentText(s.videoFormat);
+            videoCodecCombo->setCurrentText(s.videoCodec);
+            frameRateSpinBox->setValue(s.frameRate);
+            qualitySpinBox->setValue(s.quality);
+            widthSpinBox->setValue(s.width);
+            heightSpinBox->setValue(s.height);
+            maintainAspectRatio->setChecked(s.maintainAspectRatio);
+            break;
+        }
+    }
+}
+
+void MainWindow::deleteSelectedPreset() {
+    QString name = presetSelector->currentText();
+    if (name.isEmpty()) return;
+    if (QMessageBox::question(this, "Delete Preset", "Are you sure you want to delete this preset?") == QMessageBox::Yes) {
+        presetManager->removePreset(name);
+        refreshPresetList();
+    }
 }
 
 void MainWindow::updateUIForMode()

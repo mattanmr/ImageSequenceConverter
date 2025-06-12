@@ -97,6 +97,15 @@ void Converter::convertVideoToSequence(const ConversionSettings &settings)
     }
     
     currentSettings = settings;
+
+    // Ensure output directory exists
+    QDir outDir(settings.outputPath);
+    if (!outDir.exists()) {
+        if (!outDir.mkpath(".")) {
+            emit finished(false, QString("Failed to create output directory: %1").arg(settings.outputPath));
+            return;
+        }
+    }
     
     QStringList args = buildFFmpegArguments(settings, false);
     
