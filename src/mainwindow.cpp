@@ -570,15 +570,37 @@ void MainWindow::saveCurrentPreset() {
     QString name = QInputDialog::getText(this, "Save Preset", "Enter preset name:", QLineEdit::Normal, "", &ok);
     if (!ok || name.isEmpty()) return;
     ConversionSettings s;
-    s.inputPath = inputPathEdit->text();
-    s.outputPath = outputPathEdit->text();
-    s.videoFormat = videoFormatCombo->currentText().toLower();
-    s.videoCodec = videoCodecCombo->currentText();
-    s.frameRate = frameRateSpinBox->value();
-    s.quality = qualitySpinBox->value();
-    s.width = widthSpinBox->value();
-    s.height = heightSpinBox->value();
-    s.maintainAspectRatio = maintainAspectRatio->isChecked();
+    if (tabWidget->currentIndex() == 0) { // Sequence to Video
+        s.inputPath = inputPathEdit->text();
+        s.outputPath = outputPathEdit->text();
+        s.videoFormat = videoFormatCombo->currentText().toLower();
+        s.videoCodec = videoCodecCombo->currentText();
+        s.frameRate = frameRateSpinBox->value();
+        s.quality = qualitySpinBox->value();
+        s.width = widthSpinBox->value();
+        s.height = heightSpinBox->value();
+        s.maintainAspectRatio = maintainAspectRatio->isChecked();
+        // Clear video-to-sequence fields
+        s.imageFormat = "";
+        s.startFrame = 0;
+        s.endFrame = 0;
+        s.extractAllFrames = false;
+    } else { // Video to Sequence
+        s.inputPath = videoInputEdit->text();
+        s.outputPath = seqOutputEdit->text();
+        s.imageFormat = imageFormatCombo->currentText();
+        s.startFrame = startFrameSpinBox->value();
+        s.endFrame = endFrameSpinBox->value();
+        s.extractAllFrames = extractAllFrames->isChecked();
+        // Clear sequence-to-video fields
+        s.videoFormat = "";
+        s.videoCodec = "";
+        s.frameRate = 0;
+        s.quality = 0;
+        s.width = 0;
+        s.height = 0;
+        s.maintainAspectRatio = false;
+    }
     presetManager->savePreset(name, s);
     refreshPresetList();
 }
@@ -590,15 +612,26 @@ void MainWindow::loadSelectedPreset() {
     for (const auto &pair : presets) {
         if (pair.first == name) {
             const ConversionSettings &s = pair.second;
-            inputPathEdit->setText(s.inputPath);
-            outputPathEdit->setText(s.outputPath);
-            videoFormatCombo->setCurrentText(s.videoFormat);
-            videoCodecCombo->setCurrentText(s.videoCodec);
-            frameRateSpinBox->setValue(s.frameRate);
-            qualitySpinBox->setValue(s.quality);
-            widthSpinBox->setValue(s.width);
-            heightSpinBox->setValue(s.height);
-            maintainAspectRatio->setChecked(s.maintainAspectRatio);
+            if (!s.videoFormat.isEmpty() || !s.videoCodec.isEmpty()) { // Sequence to Video
+                tabWidget->setCurrentIndex(0);
+                inputPathEdit->setText(s.inputPath);
+                outputPathEdit->setText(s.outputPath);
+                videoFormatCombo->setCurrentText(s.videoFormat);
+                videoCodecCombo->setCurrentText(s.videoCodec);
+                frameRateSpinBox->setValue(s.frameRate);
+                qualitySpinBox->setValue(s.quality);
+                widthSpinBox->setValue(s.width);
+                heightSpinBox->setValue(s.height);
+                maintainAspectRatio->setChecked(s.maintainAspectRatio);
+            } else { // Video to Sequence
+                tabWidget->setCurrentIndex(1);
+                videoInputEdit->setText(s.inputPath);
+                seqOutputEdit->setText(s.outputPath);
+                imageFormatCombo->setCurrentText(s.imageFormat);
+                startFrameSpinBox->setValue(s.startFrame);
+                endFrameSpinBox->setValue(s.endFrame);
+                extractAllFrames->setChecked(s.extractAllFrames);
+            }
             break;
         }
     }
