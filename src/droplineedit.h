@@ -8,13 +8,12 @@
 #include <QUrl>
 
 class DropLineEdit : public QLineEdit {
-    Q_OBJECT  // ← This is essential for any QObject-based class using signals/slots or polymorphism
+    Q_OBJECT
 public:
-    DropLineEdit(QWidget *parent = nullptr);
+    explicit DropLineEdit(QWidget *parent = nullptr);
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 };
-
 
 #endif // DROPLINEEDIT_H

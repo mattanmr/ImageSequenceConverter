@@ -5,13 +5,11 @@
 #include <QMainWindow>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QGridLayout>
 #include <QPushButton>
 #include <QLabel>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QSpinBox>
-#include <QDoubleSpinBox>
 #include <QTextEdit>
 #include <QProgressBar>
 #include <QGroupBox>
@@ -19,7 +17,6 @@
 #include <QMessageBox>
 #include <QTabWidget>
 #include <QCheckBox>
-#include <QSlider>
 #include "converter.h"
 #include "presetmanager.h"
 #include "editablecommanddialog.h"

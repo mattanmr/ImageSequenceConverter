@@ -79,6 +79,7 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     // Find image files in the directory
     QStringList imageFiles = findImageFiles(settings.inputPath);
     if (imageFiles.isEmpty()) {
+        isProcessing = false;
         emit finished(false, "No image files found in the selected directory.");
         return;
     }
@@ -251,6 +252,7 @@ void Converter::cancel()
 {
     if (ffmpegProcess && isProcessing) {
         ffmpegProcess->kill();
+        isProcessing = false;
         emit logMessage("Conversion cancelled by user.");
     }
 }
