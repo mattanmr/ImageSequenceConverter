@@ -86,6 +86,7 @@ void MainWindow::setupSequenceToVideoTab()
     inputLayout->addWidget(new QLabel("Input Directory:"));
     inputPathEdit = new DropLineEdit(this);
     inputPathEdit->setPlaceholderText("Select folder containing image sequence...");
+    inputPathEdit->setStyleSheet("QLineEdit { color: #e0e0e0; }");
     inputLayout->addWidget(inputPathEdit, 1);  // Stretch factor
     inputBrowseBtn = new QPushButton("Browse...", this);
     inputBrowseBtn->setMaximumWidth(80);  // Limit button width
@@ -97,6 +98,7 @@ void MainWindow::setupSequenceToVideoTab()
     outputLayout->addWidget(new QLabel("Output Video:"));
     outputPathEdit = new DropLineEdit(this);
     outputPathEdit->setPlaceholderText("Select output video file...");
+    outputPathEdit->setStyleSheet("QLineEdit { color: #e0e0e0; }");
     outputLayout->addWidget(outputPathEdit, 1);  // Stretch factor
     outputBrowseBtn = new QPushButton("Browse...", this);
     outputBrowseBtn->setMaximumWidth(80);  // Limit button width

@@ -5,3 +5,7 @@ CMakeFiles/
 .DS_Store
 *.dSYM
 presets/
+# Ignore build artifacts in project root
+ImageSequenceConverter.exe
+ImageSequenceConverter.ilk
+ImageSequenceConverter.pdb
