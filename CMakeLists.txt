@@ -52,3 +52,11 @@ set_target_properties(ImageSequenceConverter PROPERTIES
     MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
     MACOSX_BUNDLE_INFO_STRING "Image Sequence to Video Converter"
 )
+
+# Set Windows-specific settings
+if (WIN32)
+    # Set the output directory for the executable and presets
+    set_target_properties(ImageSequenceConverter PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+endif()
