@@ -9,3 +9,7 @@ presets/
 ImageSequenceConverter.exe
 ImageSequenceConverter.ilk
 ImageSequenceConverter.pdb
+
+# JetBrains IDE files
+.idea/
+*.iml
