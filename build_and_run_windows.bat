@@ -35,7 +35,10 @@ nmake || (
     exit /b 1
 )
 
-REM Run the application
+REM Go back to project root to check for the executable
+cd ..
+
+REM Run the application from the project root
 if exist ImageSequenceConverter.exe (
     echo [SUCCESS] Build completed successfully!
     start ImageSequenceConverter.exe
