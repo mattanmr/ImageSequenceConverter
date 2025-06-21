@@ -93,7 +93,7 @@ private:
     QLineEdit *seqOutputEdit;
     QPushButton *convertVideoBtn;
     QTextEdit *commandPreviewEdit;
-    QPushButton *previewCmdBtn;
+    QTextEdit *commandPreviewEditVideoTab;
 
     // Preset controls
     QPushButton *savePresetBtn;
@@ -105,6 +105,10 @@ private:
     Converter *converter;
     PresetManager *presetManager;
     bool isConverting;
+
+    // Command preview buttons
+    QPushButton *previewCmdBtn;
+    QPushButton *previewVideoCmdBtn;
 };
 
 #endif // MAINWINDOW_H

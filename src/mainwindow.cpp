@@ -199,11 +199,15 @@ void MainWindow::setupSequenceToVideoTab()
     previewCmdBtn->setMaximumWidth(300);
     previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
     
-    // Command preview box (QTextEdit)
+    // Command preview box (QTextEdit) for Sequence to Video tab
+    QLabel *cmdLabel = new QLabel("FFmpeg Command:", this);
+    mainLayout->addWidget(cmdLabel);
     commandPreviewEdit = new QTextEdit(this);
     commandPreviewEdit->setReadOnly(true);
     commandPreviewEdit->setMaximumHeight(60);
     commandPreviewEdit->setPlaceholderText("FFmpeg command will appear here...");
+    commandPreviewEdit->setStyleSheet("QTextEdit { color: #e0e0e0; }" );
+    mainLayout->addWidget(commandPreviewEdit);
     
     // Center preview button and add command preview box below
     QVBoxLayout *previewBoxLayout = new QVBoxLayout();
@@ -317,6 +321,16 @@ void MainWindow::setupVideoToSequenceTab()
     previewVideoCmdBtn->setMaximumWidth(300);
     previewVideoCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
 
+    // Command preview box (QTextEdit) for Video to Sequence tab
+    QLabel *cmdLabelVideo = new QLabel("FFmpeg Command:", this);
+    mainLayout->addWidget(cmdLabelVideo);
+    commandPreviewEditVideoTab = new QTextEdit(this);
+    commandPreviewEditVideoTab->setReadOnly(true);
+    commandPreviewEditVideoTab->setMaximumHeight(60);
+    commandPreviewEditVideoTab->setPlaceholderText("FFmpeg command will appear here...");
+    commandPreviewEditVideoTab->setStyleSheet("QTextEdit { color: #e0e0e0; }" );
+    mainLayout->addWidget(commandPreviewEditVideoTab);
+    
     // Center the button
     QHBoxLayout *previewLayout = new QHBoxLayout();
     previewLayout->addStretch();
@@ -565,7 +579,7 @@ void MainWindow::showVideoToSequenceCommandPreview()
 
     QStringList args = converter->buildFFmpegArguments(settings, false);
     QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
-    commandPreviewEdit->setPlainText(command);
+    commandPreviewEditVideoTab->setPlainText(command);
 }
 
 void MainWindow::refreshPresetList() {
