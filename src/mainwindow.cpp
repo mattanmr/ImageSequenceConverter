@@ -71,7 +71,6 @@ void MainWindow::setupSequenceToVideoTab()
 {
     seqToVideoTab = new QWidget();
     tabWidget->addTab(seqToVideoTab, "Image Sequence → Video");
-    
     QVBoxLayout *mainLayout = new QVBoxLayout(seqToVideoTab);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(10);
@@ -182,43 +181,30 @@ void MainWindow::setupSequenceToVideoTab()
     
     mainLayout->addWidget(videoGroup);
     
-    // Convert button
+    // Button row: Convert and Show FFmpeg Command side by side
     convertBtn = new QPushButton("Convert to Video", this);
     convertBtn->setMinimumHeight(40);
-    convertBtn->setMaximumWidth(300);  // Limit button width
+    convertBtn->setMaximumWidth(300);
     convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
-    
-    // Center the button
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(convertBtn);
-    buttonLayout->addStretch();
-    mainLayout->addLayout(buttonLayout);
-
     previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewCmdBtn->setMaximumWidth(300);
     previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
-    
-    // Command preview box (QTextEdit) for Sequence to Video tab
+    QHBoxLayout *buttonRow = new QHBoxLayout();
+    buttonRow->addStretch();
+    buttonRow->addWidget(convertBtn);
+    buttonRow->addSpacing(16);
+    buttonRow->addWidget(previewCmdBtn);
+    buttonRow->addStretch();
+    mainLayout->addLayout(buttonRow);
+    // Command preview label and box (unique for this tab)
     QLabel *cmdLabel = new QLabel("FFmpeg Command:", this);
     mainLayout->addWidget(cmdLabel);
     commandPreviewEdit = new QTextEdit(this);
     commandPreviewEdit->setReadOnly(true);
     commandPreviewEdit->setMaximumHeight(60);
     commandPreviewEdit->setPlaceholderText("FFmpeg command will appear here...");
-    commandPreviewEdit->setStyleSheet("QTextEdit { color: #e0e0e0; }" );
+    commandPreviewEdit->setStyleSheet("QTextEdit { color: #e0e0e0; }");
     mainLayout->addWidget(commandPreviewEdit);
-    
-    // Center preview button and add command preview box below
-    QVBoxLayout *previewBoxLayout = new QVBoxLayout();
-    QHBoxLayout *previewBtnLayout = new QHBoxLayout();
-    previewBtnLayout->addStretch();
-    previewBtnLayout->addWidget(previewCmdBtn);
-    previewBtnLayout->addStretch();
-    previewBoxLayout->addLayout(previewBtnLayout);
-    previewBoxLayout->addWidget(commandPreviewEdit);
-    mainLayout->addLayout(previewBoxLayout);
-    
     mainLayout->addStretch();
 }
 
@@ -304,39 +290,31 @@ void MainWindow::setupVideoToSequenceTab()
     
     mainLayout->addWidget(imageGroup);
     
-    // Convert button
+    // Button row: Convert and Show FFmpeg Command side by side (unique for this tab)
     convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
     convertVideoBtn->setMinimumHeight(40);
     convertVideoBtn->setMaximumWidth(300);
     convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
-    
-    // Center the button
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(convertVideoBtn);
-    buttonLayout->addStretch();
-    mainLayout->addLayout(buttonLayout);
-
-    QPushButton *previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewVideoCmdBtn->setMaximumWidth(300);
     previewVideoCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
-
-    // Command preview box (QTextEdit) for Video to Sequence tab
+    QHBoxLayout *buttonRow = new QHBoxLayout();
+    buttonRow->addStretch();
+    buttonRow->addWidget(convertVideoBtn);
+    buttonRow->addSpacing(16);
+    buttonRow->addWidget(previewVideoCmdBtn);
+    buttonRow->addStretch();
+    mainLayout->addLayout(buttonRow);
+    // Command preview label and box (unique for this tab)
     QLabel *cmdLabelVideo = new QLabel("FFmpeg Command:", this);
     mainLayout->addWidget(cmdLabelVideo);
     commandPreviewEditVideoTab = new QTextEdit(this);
     commandPreviewEditVideoTab->setReadOnly(true);
     commandPreviewEditVideoTab->setMaximumHeight(60);
     commandPreviewEditVideoTab->setPlaceholderText("FFmpeg command will appear here...");
-    commandPreviewEditVideoTab->setStyleSheet("QTextEdit { color: #e0e0e0; }" );
+    commandPreviewEditVideoTab->setStyleSheet("QTextEdit { color: #e0e0e0; }");
     mainLayout->addWidget(commandPreviewEditVideoTab);
-    
-    // Center the button
-    QHBoxLayout *previewLayout = new QHBoxLayout();
-    previewLayout->addStretch();
-    previewLayout->addWidget(previewVideoCmdBtn);
-    previewLayout->addStretch();
-    mainLayout->addLayout(previewLayout);
+    mainLayout->addStretch();
 
     connect(previewVideoCmdBtn, &QPushButton::clicked, this, &MainWindow::showVideoToSequenceCommandPreview);
 
