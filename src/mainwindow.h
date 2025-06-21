@@ -92,7 +92,7 @@ private:
     QLineEdit *videoInputEdit;
     QLineEdit *seqOutputEdit;
     QPushButton *convertVideoBtn;
-    QLineEdit *commandPreviewEdit;
+    QTextEdit *commandPreviewEdit;
     QPushButton *previewCmdBtn;
 
     // Preset controls

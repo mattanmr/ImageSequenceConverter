@@ -198,13 +198,22 @@ void MainWindow::setupSequenceToVideoTab()
     previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewCmdBtn->setMaximumWidth(300);
     previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
-
-    // Center it
-    QHBoxLayout *previewLayout = new QHBoxLayout();
-    previewLayout->addStretch();
-    previewLayout->addWidget(previewCmdBtn);
-    previewLayout->addStretch();
-    mainLayout->addLayout(previewLayout);
+    
+    // Command preview box (QTextEdit)
+    commandPreviewEdit = new QTextEdit(this);
+    commandPreviewEdit->setReadOnly(true);
+    commandPreviewEdit->setMaximumHeight(60);
+    commandPreviewEdit->setPlaceholderText("FFmpeg command will appear here...");
+    
+    // Center preview button and add command preview box below
+    QVBoxLayout *previewBoxLayout = new QVBoxLayout();
+    QHBoxLayout *previewBtnLayout = new QHBoxLayout();
+    previewBtnLayout->addStretch();
+    previewBtnLayout->addWidget(previewCmdBtn);
+    previewBtnLayout->addStretch();
+    previewBoxLayout->addLayout(previewBtnLayout);
+    previewBoxLayout->addWidget(commandPreviewEdit);
+    mainLayout->addLayout(previewBoxLayout);
     
     mainLayout->addStretch();
 }
@@ -533,8 +542,7 @@ void MainWindow::showFFmpegCommandPreview()
 
     QStringList args = converter->buildFFmpegArguments(settings, true);
     QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
-
-    QMessageBox::information(this, "FFmpeg Command Preview", command);
+    commandPreviewEdit->setPlainText(command);
 }
 
 void MainWindow::showVideoToSequenceCommandPreview()
@@ -557,8 +565,7 @@ void MainWindow::showVideoToSequenceCommandPreview()
 
     QStringList args = converter->buildFFmpegArguments(settings, false);
     QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
-
-    QMessageBox::information(this, "FFmpeg Command Preview", command);
+    commandPreviewEdit->setPlainText(command);
 }
 
 void MainWindow::refreshPresetList() {
