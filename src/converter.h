@@ -27,6 +27,7 @@ struct ConversionSettings {
     int endFrame;
     bool extractAllFrames;
     QString customCommand; // optional raw ffmpeg command
+    bool exportAudio = false;
 };
 
 class Converter : public QObject

@@ -149,6 +149,9 @@ QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, 
 
             args << "-framerate" << QString::number(settings.frameRate);
             args << "-i" << inputPattern;
+            if (settings.exportAudio) {
+                args << "-f" << "lavfi" << "-i" << "anullsrc=channel_layout=stereo:sample_rate=44100";
+            }
         }
 
         QString codecName = getVideoCodecName(settings.videoCodec);
@@ -163,6 +166,11 @@ QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, 
                              .arg(settings.width).arg(settings.height);
         } else {
             args << "-s" << QString("%1x%2").arg(settings.width).arg(settings.height);
+        }
+
+        if (settings.exportAudio) {
+            args << "-c:a" << "aac";
+            args << "-shortest";
         }
 
         args << "-f" << settings.videoFormat.toLower();

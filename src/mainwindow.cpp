@@ -180,6 +180,10 @@ void MainWindow::setupSequenceToVideoTab()
     videoLayout->addLayout(resolutionRow);
     
     mainLayout->addWidget(videoGroup);
+    // Export Audio checkbox
+    exportAudioCheckBox = new QCheckBox("Export Audio (add silent track if none)", this);
+    exportAudioCheckBox->setChecked(false);
+    mainLayout->addWidget(exportAudioCheckBox);
     
     // Button row: Convert and Show FFmpeg Command side by side
     convertBtn = new QPushButton("Convert to Video", this);
@@ -417,6 +421,7 @@ void MainWindow::startConversion()
     settings.width = widthSpinBox->value();
     settings.height = heightSpinBox->value();
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    settings.exportAudio = exportAudioCheckBox->isChecked();
     logOutput->clear();
     progressBar->setVisible(true);
     progressBar->setValue(0);
@@ -531,6 +536,7 @@ void MainWindow::showFFmpegCommandPreview()
     settings.width = widthSpinBox->value();
     settings.height = heightSpinBox->value();
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    settings.exportAudio = exportAudioCheckBox->isChecked();
 
     QStringList args = converter->buildFFmpegArguments(settings, true);
     QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";

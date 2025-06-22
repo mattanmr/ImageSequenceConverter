@@ -83,6 +83,7 @@ private:
     QSpinBox *widthSpinBox;
     QSpinBox *heightSpinBox;
     QCheckBox *maintainAspectRatio;
+    QCheckBox *exportAudioCheckBox;
     
     // Video to Sequence controls
     QComboBox *imageFormatCombo;
