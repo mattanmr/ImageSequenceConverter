@@ -16,8 +16,8 @@ MainWindow::MainWindow(QWidget *parent)
     setupUI();
     connectSignals();
     setWindowTitle("Image Sequence Converter");
-    setMinimumSize(600, 500);
-    resize(700, 600);
+    setMinimumSize(700, 650); // Increased minimum height for better layout
+    resize(800, 700);
     presetManager = new PresetManager(this);
     refreshPresetList();
 }
@@ -74,8 +74,8 @@ void MainWindow::setupSequenceToVideoTab()
     QVBoxLayout *mainLayout = new QVBoxLayout(seqToVideoTab);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(10);
-    
-    // Input/Output section - more compact
+
+    // Input/Output section
     QGroupBox *ioGroup = new QGroupBox("Input/Output", this);
     QVBoxLayout *ioLayout = new QVBoxLayout(ioGroup);
     ioLayout->setSpacing(8);
@@ -105,8 +105,8 @@ void MainWindow::setupSequenceToVideoTab()
     ioLayout->addLayout(outputLayout);
     
     mainLayout->addWidget(ioGroup);
-    
-    // Video settings - more compact arrangement
+
+    // Video settings
     QGroupBox *videoGroup = new QGroupBox("Video Settings", this);
     QVBoxLayout *videoLayout = new QVBoxLayout(videoGroup);
     videoLayout->setSpacing(8);
@@ -179,12 +179,13 @@ void MainWindow::setupSequenceToVideoTab()
     resolutionRow->addStretch();
     videoLayout->addLayout(resolutionRow);
     
-    mainLayout->addWidget(videoGroup);
+    mainLayout->addWidget(videoGroup, 1); // Only videoGroup gets stretch
+
     // Export Audio checkbox
     exportAudioCheckBox = new QCheckBox("Export Audio (add silent track if none)", this);
     exportAudioCheckBox->setChecked(false);
     mainLayout->addWidget(exportAudioCheckBox);
-    
+
     // Button row: Convert and Show FFmpeg Command side by side
     convertBtn = new QPushButton("Convert to Video", this);
     convertBtn->setMinimumHeight(40);
@@ -200,7 +201,8 @@ void MainWindow::setupSequenceToVideoTab()
     buttonRow->addWidget(previewCmdBtn);
     buttonRow->addStretch();
     mainLayout->addLayout(buttonRow);
-    // Command preview label and box (unique for this tab)
+
+    // Command preview label and box
     QLabel *cmdLabel = new QLabel("FFmpeg Command:", this);
     mainLayout->addWidget(cmdLabel);
     commandPreviewEdit = new QTextEdit(this);
@@ -209,7 +211,6 @@ void MainWindow::setupSequenceToVideoTab()
     commandPreviewEdit->setPlaceholderText("FFmpeg command will appear here...");
     commandPreviewEdit->setStyleSheet("QTextEdit { color: #e0e0e0; }");
     mainLayout->addWidget(commandPreviewEdit);
-    mainLayout->addStretch();
 }
 
 void MainWindow::setupVideoToSequenceTab()
