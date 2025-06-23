@@ -7,6 +7,8 @@
 #include "converter.h"
 
 // ConversionService: wraps Converter and exposes signals for UI
+// Maps Converter's progressChanged to conversionProgress, finished to conversionFinished
+// Calls convertSequenceToVideo or convertVideoToSequence based on settings
 class ConversionService : public QObject {
     Q_OBJECT
 public:
@@ -19,6 +21,12 @@ public:
     void cancelConversion();
     // Returns true if a conversion is in progress
     bool isConverting() const;
+    // Returns the FFmpeg command line for preview (sequenceToVideo or videoToSequence)
+    QString buildFFmpegCommandPreview(const ConversionSettings &settings, bool isSequenceToVideo) const;
+    // Returns true if FFmpeg is available
+    bool isFFmpegAvailable() const;
+    // Returns the FFmpeg executable path
+    QString findFFmpegPath() const;
 
 signals:
     void conversionStarted();

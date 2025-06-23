@@ -24,6 +24,7 @@ set(SOURCES
     src/droplineedit.cpp
     src/presetmanager.cpp
     src/editablecommanddialog.cpp
+    src/conversionservice.cpp
 )
 
 # Header files
@@ -32,6 +33,7 @@ set(HEADERS
     src/converter.h
     src/presetmanager.h
     src/editablecommanddialog.h
+    src/conversionservice.h
 )
 
 # Create the executable
@@ -60,3 +62,6 @@ if (WIN32)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
 endif()
+
+# Add tests subdirectory
+add_subdirectory(tests)

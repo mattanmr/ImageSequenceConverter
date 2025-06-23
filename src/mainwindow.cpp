@@ -530,8 +530,33 @@ void MainWindow::showFFmpegCommandPreview()
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
     settings.exportAudio = exportAudioCheckBox->isChecked();
 
-    QStringList args = converter->buildFFmpegArguments(settings, true);
-    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+    QString command = conversionService->buildFFmpegCommandPreview(settings, true);
+    commandPreviewEdit->setPlainText(command);
+}
+
+void MainWindow::showSequenceToVideoCommandPreview()
+{
+    QString inputPath = inputPathEdit->text();
+    QString outputPath = outputPathEdit->text();
+
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please set both input and output paths.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.videoFormat = videoFormatCombo->currentText().toLower();
+    settings.videoCodec = videoCodecCombo->currentText();
+    settings.frameRate = frameRateSpinBox->value();
+    settings.quality = qualitySpinBox->value();
+    settings.width = widthSpinBox->value();
+    settings.height = heightSpinBox->value();
+    settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    settings.exportAudio = exportAudioCheckBox->isChecked();
+
+    QString command = conversionService->buildFFmpegCommandPreview(settings, true);
     commandPreviewEdit->setPlainText(command);
 }
 
@@ -553,8 +578,7 @@ void MainWindow::showVideoToSequenceCommandPreview()
     settings.startFrame = startFrameSpinBox->value();
     settings.endFrame = endFrameSpinBox->value();
 
-    QStringList args = converter->buildFFmpegArguments(settings, false);
-    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+    QString command = conversionService->buildFFmpegCommandPreview(settings, false);
     commandPreviewEditVideoTab->setPlainText(command);
 }
 

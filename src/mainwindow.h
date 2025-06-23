@@ -25,6 +25,7 @@
 #include "presetmanager.h"
 #include "editablecommanddialog.h"
 #include "constants.h"
+#include "conversionservice.h"
 
 // MainWindow: top-level window and controller for the app
 class MainWindow : public QMainWindow
@@ -48,6 +49,7 @@ private slots:
     void startVideoToSequenceConversion();
     void showFFmpegCommandPreview();
     void showVideoToSequenceCommandPreview();
+    void showSequenceToVideoCommandPreview();
     void saveCurrentPreset();
     void loadSelectedPreset();
     void deleteSelectedPreset();
