@@ -1,11 +1,15 @@
+// presetmanager.cpp
+// Implements PresetManager, which handles persistent storage and retrieval of user conversion presets.
 #include "presetmanager.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QMessageBox>
 #include <QStandardPaths>
 
+// Constructor
 PresetManager::PresetManager(QObject *parent) : QObject(parent) {}
 
+// Returns the folder for storing presets, creating it if necessary
 QString PresetManager::presetFolder() const {
     // Use QStandardPaths for cross-platform app data location
     QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/presets";
@@ -15,10 +19,12 @@ QString PresetManager::presetFolder() const {
     return dir;
 }
 
+// Returns the full path to the presets JSON file
 QString PresetManager::presetFilePath() const {
     return presetFolder() + "/presets.json";
 }
 
+// Saves a named preset to disk (overwrites if exists)
 void PresetManager::savePreset(const QString &name, const ConversionSettings &settings) {
     QFile file(presetFilePath());
     QJsonObject allPresets;
@@ -43,6 +49,7 @@ void PresetManager::savePreset(const QString &name, const ConversionSettings &se
     }
 }
 
+// Loads all presets from disk
 QList<QPair<QString, ConversionSettings>> PresetManager::loadPresets() {
     QList<QPair<QString, ConversionSettings>> list;
     QFile file(presetFilePath());
@@ -65,6 +72,7 @@ QList<QPair<QString, ConversionSettings>> PresetManager::loadPresets() {
     return list;
 }
 
+// Removes a preset by name
 bool PresetManager::removePreset(const QString &name) {
     QFile file(presetFilePath());
     if (!file.open(QIODevice::ReadOnly)) {
@@ -94,6 +102,7 @@ bool PresetManager::removePreset(const QString &name) {
     return true;
 }
 
+// Converts settings to JSON object
 QJsonObject PresetManager::settingsToJson(const ConversionSettings &s) const {
     QJsonObject o;
     o["inputPath"] = s.inputPath;
@@ -113,6 +122,7 @@ QJsonObject PresetManager::settingsToJson(const ConversionSettings &s) const {
     return o;
 }
 
+// Converts JSON object to settings
 ConversionSettings PresetManager::jsonToSettings(const QJsonObject &o) const {
     ConversionSettings s;
     s.inputPath = o["inputPath"].toString();

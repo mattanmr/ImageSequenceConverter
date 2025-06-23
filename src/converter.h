@@ -1,4 +1,5 @@
 // converter.h
+// Conversion logic for image sequence <-> video using FFmpeg. Handles process management and settings.
 #ifndef CONVERTER_H
 #define CONVERTER_H
 
@@ -10,26 +11,27 @@
 #include <QFileInfo>
 #include <QThread>
 
+// Holds all user-configurable settings for a conversion operation
 struct ConversionSettings {
-    QString inputPath;
-    QString outputPath;
-    QString videoFormat;
-    QString videoCodec;
-    int frameRate;
-    int quality;
-    int width;
-    int height;
-    bool maintainAspectRatio;
-    
+    QString inputPath;         // Input file or folder
+    QString outputPath;        // Output file or folder
+    QString videoFormat;       // Target video format (e.g., MP4)
+    QString videoCodec;        // Video codec (e.g., H.264)
+    int frameRate;             // Frames per second
+    int quality;               // Codec quality/CRF
+    int width;                 // Output width
+    int height;                // Output height
+    bool maintainAspectRatio;  // Whether to preserve aspect ratio
     // Video to sequence settings
-    QString imageFormat;
-    int startFrame;
-    int endFrame;
-    bool extractAllFrames;
-    QString customCommand; // optional raw ffmpeg command
-    bool exportAudio = false;
+    QString imageFormat;       // Output image format (e.g., PNG)
+    int startFrame;            // First frame to extract
+    int endFrame;              // Last frame to extract
+    bool extractAllFrames;     // Extract all frames flag
+    QString customCommand;     // Optional raw ffmpeg command
+    bool exportAudio = false;  // Export audio track (for video export)
 };
 
+// Converter: manages FFmpeg process and conversion logic
 class Converter : public QObject
 {
     Q_OBJECT

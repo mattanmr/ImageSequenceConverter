@@ -1,4 +1,5 @@
 // mainwindow.cpp
+// Implements the MainWindow class, which provides the main UI and user interaction logic for Image Sequence Converter.
 #include "mainwindow.h"
 #include <QApplication>
 #include <QDir>
@@ -9,6 +10,7 @@
 #include <QInputDialog>
 #include "constants.h"
 
+// Main window constructor: sets up UI and connects signals
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , converter(new Converter(this))
@@ -27,6 +29,7 @@ MainWindow::~MainWindow()
 {
 }
 
+// Sets up the main UI layout and widgets
 void MainWindow::setupUI()
 {
     centralWidget = new QWidget(this);

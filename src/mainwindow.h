@@ -1,4 +1,5 @@
 // mainwindow.h
+// Main application window for Image Sequence Converter. Handles all UI and user interaction.
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -25,6 +26,7 @@
 #include "editablecommanddialog.h"
 #include "constants.h"
 
+// MainWindow: top-level window and controller for the app
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -34,6 +36,7 @@ public:
     ~MainWindow();
 
 private slots:
+    // UI event handlers
     void selectInputPath();
     void selectOutputPath();
     void startConversion();

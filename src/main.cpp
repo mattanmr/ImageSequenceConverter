@@ -1,4 +1,5 @@
 // main.cpp
+// Application entry point. Sets up QApplication, style, and launches the main window.
 #include <QApplication>
 #include <QStyleFactory>
 #include <QDir>
