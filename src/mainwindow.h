@@ -23,6 +23,7 @@
 #include "converter.h"
 #include "presetmanager.h"
 #include "editablecommanddialog.h"
+#include "constants.h"
 
 class MainWindow : public QMainWindow
 {

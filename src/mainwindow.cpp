@@ -7,6 +7,7 @@
 #include "presetmanager.h"
 #include "editablecommanddialog.h"
 #include <QInputDialog>
+#include "constants.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -115,14 +116,14 @@ void MainWindow::setupSequenceToVideoTab()
     QHBoxLayout *formatRow = new QHBoxLayout();
     formatRow->addWidget(new QLabel("Format:"));
     videoFormatCombo = new QComboBox(this);
-    videoFormatCombo->addItems({"MP4", "AVI", "MOV", "MKV", "WebM"});
+    videoFormatCombo->addItems(Constants::SupportedVideoFormats);
     videoFormatCombo->setMaximumWidth(100);
     formatRow->addWidget(videoFormatCombo);
     
     formatRow->addSpacing(20);  // Add some space
     formatRow->addWidget(new QLabel("Codec:"));
     videoCodecCombo = new QComboBox(this);
-    videoCodecCombo->addItems({"H.264", "H.265", "VP9", "ProRes"});
+    videoCodecCombo->addItems(Constants::SupportedCodecs);
     videoCodecCombo->setMaximumWidth(100);
     formatRow->addWidget(videoCodecCombo);
     formatRow->addStretch();  // Push everything to the left
@@ -132,8 +133,8 @@ void MainWindow::setupSequenceToVideoTab()
     QHBoxLayout *rateQualityRow = new QHBoxLayout();
     rateQualityRow->addWidget(new QLabel("Frame Rate:"));
     frameRateSpinBox = new QSpinBox(this);
-    frameRateSpinBox->setRange(1, 60);
-    frameRateSpinBox->setValue(24);
+    frameRateSpinBox->setRange(1, Constants::MaxFrameRate);
+    frameRateSpinBox->setValue(Constants::DefaultFrameRate);
     frameRateSpinBox->setMaximumWidth(60);
     rateQualityRow->addWidget(frameRateSpinBox);
     frameRateLabel = new QLabel("24 fps", this);
@@ -143,8 +144,8 @@ void MainWindow::setupSequenceToVideoTab()
     rateQualityRow->addSpacing(20);
     rateQualityRow->addWidget(new QLabel("Quality:"));
     qualitySpinBox = new QSpinBox(this);
-    qualitySpinBox->setRange(1, 51);
-    qualitySpinBox->setValue(23);
+    qualitySpinBox->setRange(Constants::MinQuality, Constants::MaxQuality);
+    qualitySpinBox->setValue(Constants::DefaultQuality);
     qualitySpinBox->setMaximumWidth(60);
     rateQualityRow->addWidget(qualitySpinBox);
     qualityLabel = new QLabel("High (CRF 23)", this);
@@ -157,19 +158,19 @@ void MainWindow::setupSequenceToVideoTab()
     QHBoxLayout *resolutionRow = new QHBoxLayout();
     resolutionRow->addWidget(new QLabel("Width:"));
     widthSpinBox = new QSpinBox(this);
-    widthSpinBox->setRange(1, 7680);
+    widthSpinBox->setRange(1, Constants::MaxVideoWidth);
     widthSpinBox->setValue(1920);
     widthSpinBox->setSingleStep(2);
-    widthSpinBox->setMaximumWidth(80);
+    widthSpinBox->setMaximumWidth(Constants::MaxSpinWidth);
     resolutionRow->addWidget(widthSpinBox);
     
     resolutionRow->addSpacing(10);
     resolutionRow->addWidget(new QLabel("Height:"));
     heightSpinBox = new QSpinBox(this);
-    heightSpinBox->setRange(1, 4320);
+    heightSpinBox->setRange(1, Constants::MaxVideoHeight);
     heightSpinBox->setValue(1080);
     heightSpinBox->setSingleStep(2);
-    heightSpinBox->setMaximumWidth(80);
+    heightSpinBox->setMaximumWidth(Constants::MaxSpinWidth);
     resolutionRow->addWidget(heightSpinBox);
     
     resolutionRow->addSpacing(20);
@@ -262,7 +263,7 @@ void MainWindow::setupVideoToSequenceTab()
     QHBoxLayout *formatRow = new QHBoxLayout();
     formatRow->addWidget(new QLabel("Format:"));
     imageFormatCombo = new QComboBox(this);
-    imageFormatCombo->addItems({"PNG", "JPEG", "TIFF", "BMP", "EXR"});
+    imageFormatCombo->addItems(Constants::SupportedImageFormats);
     imageFormatCombo->setMaximumWidth(100);
     formatRow->addWidget(imageFormatCombo);
     formatRow->addStretch();
