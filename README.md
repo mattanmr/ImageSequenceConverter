@@ -10,7 +10,7 @@ A cross-platform (macOS & Windows) application for converting between image sequ
 - Codec options: H.264, H.265, VP9, ProRes
 - Adjustable frame rate, resolution, and CRF quality
 - Aspect ratio preservation
-- **Export Audio** option
+- Export Audio option
 - Real-time progress logging
 
 ### Video → Image Sequence
