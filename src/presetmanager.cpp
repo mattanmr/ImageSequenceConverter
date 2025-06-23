@@ -2,21 +2,13 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QMessageBox>
+#include <QStandardPaths>
 
 PresetManager::PresetManager(QObject *parent) : QObject(parent) {}
 
 QString PresetManager::presetFolder() const {
-#ifdef Q_OS_WIN
-    // On Windows, use the directory where the executable is located
-    QString dir = QCoreApplication::applicationDirPath() + "/presets";
-#else
-    // On macOS/Linux, go up from the app bundle to the project root
-    QDir appDir(QCoreApplication::applicationDirPath());
-    appDir.cdUp(); // .../Contents
-    appDir.cdUp(); // .../ImageSequenceConverter.app
-    appDir.cdUp(); // project root
-    QString dir = appDir.absolutePath() + "/presets";
-#endif
+    // Use QStandardPaths for cross-platform app data location
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/presets";
     if (!QDir().mkpath(dir)) {
         QMessageBox::critical(nullptr, "Preset Folder Error", "Failed to create or access the presets directory: " + dir);
     }
