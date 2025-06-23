@@ -1,6 +1,7 @@
 #include "presetmanager.h"
 #include <QCoreApplication>
 #include <QDir>
+#include <QMessageBox>
 
 PresetManager::PresetManager(QObject *parent) : QObject(parent) {}
 
@@ -14,10 +15,11 @@ QString PresetManager::presetFolder() const {
     appDir.cdUp(); // .../Contents
     appDir.cdUp(); // .../ImageSequenceConverter.app
     appDir.cdUp(); // project root
-    appDir.cdUp()
     QString dir = appDir.absolutePath() + "/presets";
 #endif
-    QDir().mkpath(dir);
+    if (!QDir().mkpath(dir)) {
+        QMessageBox::critical(nullptr, "Preset Folder Error", "Failed to create or access the presets directory: " + dir);
+    }
     return dir;
 }
 
@@ -33,13 +35,19 @@ void PresetManager::savePreset(const QString &name, const ConversionSettings &se
         QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
         if (doc.isObject()) allPresets = doc.object();
         file.close();
+    } else if (file.exists()) {
+        QMessageBox::critical(nullptr, "Preset Load Error", "Failed to open presets file for reading: " + file.fileName());
     }
 
     allPresets[name] = settingsToJson(settings);
 
     if (file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        file.write(QJsonDocument(allPresets).toJson());
+        if (file.write(QJsonDocument(allPresets).toJson()) == -1) {
+            QMessageBox::critical(nullptr, "Preset Save Error", "Failed to write to presets file: " + file.fileName());
+        }
         file.close();
+    } else {
+        QMessageBox::critical(nullptr, "Preset Save Error", "Failed to open presets file for writing: " + file.fileName());
     }
 }
 
@@ -47,7 +55,12 @@ QList<QPair<QString, ConversionSettings>> PresetManager::loadPresets() {
     QList<QPair<QString, ConversionSettings>> list;
     QFile file(presetFilePath());
 
-    if (!file.open(QIODevice::ReadOnly)) return list;
+    if (!file.open(QIODevice::ReadOnly)) {
+        if (file.exists()) {
+            QMessageBox::critical(nullptr, "Preset Load Error", "Failed to open presets file for reading: " + file.fileName());
+        }
+        return list;
+    }
 
     QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
     file.close();
@@ -62,7 +75,12 @@ QList<QPair<QString, ConversionSettings>> PresetManager::loadPresets() {
 
 bool PresetManager::removePreset(const QString &name) {
     QFile file(presetFilePath());
-    if (!file.open(QIODevice::ReadOnly)) return false;
+    if (!file.open(QIODevice::ReadOnly)) {
+        if (file.exists()) {
+            QMessageBox::critical(nullptr, "Preset Remove Error", "Failed to open presets file for reading: " + file.fileName());
+        }
+        return false;
+    }
 
     QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
     file.close();
@@ -71,8 +89,15 @@ bool PresetManager::removePreset(const QString &name) {
     QJsonObject obj = doc.object();
     obj.remove(name);
 
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
-    file.write(QJsonDocument(obj).toJson());
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QMessageBox::critical(nullptr, "Preset Remove Error", "Failed to open presets file for writing: " + file.fileName());
+        return false;
+    }
+    if (file.write(QJsonDocument(obj).toJson()) == -1) {
+        QMessageBox::critical(nullptr, "Preset Remove Error", "Failed to write to presets file: " + file.fileName());
+        file.close();
+        return false;
+    }
     file.close();
     return true;
 }
