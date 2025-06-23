@@ -190,7 +190,7 @@ void MainWindow::setupSequenceToVideoTab()
     convertBtn = new QPushButton("Convert to Video", this);
     convertBtn->setMinimumHeight(40);
     convertBtn->setMaximumWidth(300);
-    convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
+    convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; color:rgb(41, 190, 204); }");
     previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewCmdBtn->setMaximumWidth(300);
     previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
@@ -299,7 +299,7 @@ void MainWindow::setupVideoToSequenceTab()
     convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
     convertVideoBtn->setMinimumHeight(40);
     convertVideoBtn->setMaximumWidth(300);
-    convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
+    convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; color:rgb(41, 190, 204); }");
     previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewVideoCmdBtn->setMaximumWidth(300);
     previewVideoCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");

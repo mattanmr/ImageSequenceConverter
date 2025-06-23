@@ -14,6 +14,7 @@ QString PresetManager::presetFolder() const {
     appDir.cdUp(); // .../Contents
     appDir.cdUp(); // .../ImageSequenceConverter.app
     appDir.cdUp(); // project root
+    appDir.cdUp()
     QString dir = appDir.absolutePath() + "/presets";
 #endif
     QDir().mkpath(dir);
