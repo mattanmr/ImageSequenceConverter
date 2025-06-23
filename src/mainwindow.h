@@ -107,7 +107,8 @@ private:
     QComboBox *presetSelector;
     
     // Backend
-    Converter *converter;
+    //Converter *converter; // Replaced by ConversionService
+    ConversionService *conversionService;
     PresetManager *presetManager;
     bool isConverting;
 

@@ -9,11 +9,12 @@
 #include "editablecommanddialog.h"
 #include <QInputDialog>
 #include "constants.h"
+#include "conversionservice.h"
 
 // Main window constructor: sets up UI and connects signals
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , converter(new Converter(this))
+    , conversionService(new ConversionService(this))
     , isConverting(false)
 {
     setupUI();
@@ -23,6 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
     resize(800, 700);
     presetManager = new PresetManager(this);
     refreshPresetList();
+    // Connect conversion service signals
+    connect(conversionService, &ConversionService::conversionProgress, this, &MainWindow::onConversionProgress);
+    connect(conversionService, &ConversionService::conversionFinished, this, &MainWindow::onConversionFinished);
 }
 
 MainWindow::~MainWindow()
@@ -370,9 +374,6 @@ void MainWindow::connectSignals()
     connect(previewCmdBtn, &QPushButton::clicked, this, &MainWindow::showFFmpegCommandPreview);
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::updateFrameRateDisplay);
     connect(qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::updateQualityDisplay);
-    connect(converter, &Converter::progressChanged, this, &MainWindow::onConversionProgress);
-    connect(converter, &Converter::finished, this, &MainWindow::onConversionFinished);
-    connect(converter, &Converter::logMessage, [this](const QString &message) { logOutput->append(message); });
     connect(savePresetBtn, &QPushButton::clicked, this, &MainWindow::saveCurrentPreset);
     connect(loadPresetBtn, &QPushButton::clicked, this, &MainWindow::loadSelectedPreset);
     connect(deletePresetBtn, &QPushButton::clicked, this, &MainWindow::deleteSelectedPreset);
@@ -402,7 +403,7 @@ void MainWindow::selectOutputPath()
 void MainWindow::startConversion()
 {
     if (isConverting) {
-        converter->cancel();
+        conversionService->cancelConversion();
         return;
     }
     QString inputPath = inputPathEdit->text();
@@ -432,19 +433,14 @@ void MainWindow::startConversion()
     progressBar->setValue(0);
     convertBtn->setText("Cancel");
     isConverting = true;
-    QStringList args = converter->buildFFmpegArguments(settings, true);
-    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
-    if (dlg.exec() == QDialog::Accepted) {
-        QString edited = dlg.getCommand();
-        settings.customCommand = edited;
-    }
-    converter->convertSequenceToVideo(settings);
+    // Use ConversionService
+    conversionService->startConversion(settings);
 }
 
 void MainWindow::startVideoToSequenceConversion()
 {
     if (isConverting) {
-        converter->cancel();
+        conversionService->cancelConversion();
         return;
     }
     QString inputVideo = videoInputEdit->text();
@@ -460,20 +456,13 @@ void MainWindow::startVideoToSequenceConversion()
     settings.extractAllFrames = extractAllFrames->isChecked();
     settings.startFrame = startFrameSpinBox->value();
     settings.endFrame = endFrameSpinBox->value();
-    QStringList args = converter->buildFFmpegArguments(settings, false);
-    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
-    if (dlg.exec() == QDialog::Accepted) {
-        QString edited = dlg.getCommand();
-        settings.customCommand = edited;
-    } else {
-        return;
-    }
     logOutput->clear();
     progressBar->setVisible(true);
     progressBar->setValue(0);
     convertVideoBtn->setText("Cancel");
     isConverting = true;
-    converter->convertVideoToSequence(settings);
+    // Use ConversionService
+    conversionService->startConversion(settings);
 }
 
 void MainWindow::onConversionProgress(int percentage)
@@ -489,9 +478,7 @@ void MainWindow::onConversionFinished(bool success, const QString &message)
         convertVideoBtn->setText("Convert to Image Sequence");
     }
     isConverting = false;
-    
     logOutput->append(message);
-    
     if (success) {
         QMessageBox::information(this, "Success", "Conversion completed successfully!");
     } else {
