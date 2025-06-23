@@ -1,8 +1,12 @@
+// editablecommanddialog.cpp
+// Implements EditableCommandDialog, a dialog for editing and copying custom FFmpeg commands.
+
 #include "editablecommanddialog.h"
 #include <QHBoxLayout>
 #include <QClipboard>
 #include <QApplication>
 
+// Constructor: sets up dialog UI and connects buttons
 EditableCommandDialog::EditableCommandDialog(const QString &command, QWidget *parent)
     : QDialog(parent) {
     setWindowTitle("Edit FFmpeg Command");
@@ -33,6 +37,7 @@ EditableCommandDialog::EditableCommandDialog(const QString &command, QWidget *pa
     });
 }
 
+// Returns the edited command string
 QString EditableCommandDialog::getCommand() const {
     return commandEdit->toPlainText();
 }

@@ -1,4 +1,5 @@
 // mainwindow.cpp
+// Implements the MainWindow class, which provides the main UI and user interaction logic for Image Sequence Converter.
 #include "mainwindow.h"
 #include <QApplication>
 #include <QDir>
@@ -7,25 +8,32 @@
 #include "presetmanager.h"
 #include "editablecommanddialog.h"
 #include <QInputDialog>
+#include "constants.h"
+#include "conversionservice.h"
 
+// Main window constructor: sets up UI and connects signals
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , converter(new Converter(this))
+    , conversionService(new ConversionService(this))
     , isConverting(false)
 {
     setupUI();
     connectSignals();
     setWindowTitle("Image Sequence Converter");
-    setMinimumSize(600, 500);
-    resize(700, 600);
+    setMinimumSize(700, 650); // Increased minimum height for better layout
+    resize(800, 700);
     presetManager = new PresetManager(this);
     refreshPresetList();
+    // Connect conversion service signals
+    connect(conversionService, &ConversionService::conversionProgress, this, &MainWindow::onConversionProgress);
+    connect(conversionService, &ConversionService::conversionFinished, this, &MainWindow::onConversionFinished);
 }
 
 MainWindow::~MainWindow()
 {
 }
 
+// Sets up the main UI layout and widgets
 void MainWindow::setupUI()
 {
     centralWidget = new QWidget(this);
@@ -71,12 +79,11 @@ void MainWindow::setupSequenceToVideoTab()
 {
     seqToVideoTab = new QWidget();
     tabWidget->addTab(seqToVideoTab, "Image Sequence → Video");
-    
     QVBoxLayout *mainLayout = new QVBoxLayout(seqToVideoTab);
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(10);
-    
-    // Input/Output section - more compact
+
+    // Input/Output section
     QGroupBox *ioGroup = new QGroupBox("Input/Output", this);
     QVBoxLayout *ioLayout = new QVBoxLayout(ioGroup);
     ioLayout->setSpacing(8);
@@ -106,8 +113,8 @@ void MainWindow::setupSequenceToVideoTab()
     ioLayout->addLayout(outputLayout);
     
     mainLayout->addWidget(ioGroup);
-    
-    // Video settings - more compact arrangement
+
+    // Video settings
     QGroupBox *videoGroup = new QGroupBox("Video Settings", this);
     QVBoxLayout *videoLayout = new QVBoxLayout(videoGroup);
     videoLayout->setSpacing(8);
@@ -116,14 +123,14 @@ void MainWindow::setupSequenceToVideoTab()
     QHBoxLayout *formatRow = new QHBoxLayout();
     formatRow->addWidget(new QLabel("Format:"));
     videoFormatCombo = new QComboBox(this);
-    videoFormatCombo->addItems({"MP4", "AVI", "MOV", "MKV", "WebM"});
+    videoFormatCombo->addItems(Constants::SupportedVideoFormats);
     videoFormatCombo->setMaximumWidth(100);
     formatRow->addWidget(videoFormatCombo);
     
     formatRow->addSpacing(20);  // Add some space
     formatRow->addWidget(new QLabel("Codec:"));
     videoCodecCombo = new QComboBox(this);
-    videoCodecCombo->addItems({"H.264", "H.265", "VP9", "ProRes"});
+    videoCodecCombo->addItems(Constants::SupportedCodecs);
     videoCodecCombo->setMaximumWidth(100);
     formatRow->addWidget(videoCodecCombo);
     formatRow->addStretch();  // Push everything to the left
@@ -133,8 +140,8 @@ void MainWindow::setupSequenceToVideoTab()
     QHBoxLayout *rateQualityRow = new QHBoxLayout();
     rateQualityRow->addWidget(new QLabel("Frame Rate:"));
     frameRateSpinBox = new QSpinBox(this);
-    frameRateSpinBox->setRange(1, 60);
-    frameRateSpinBox->setValue(24);
+    frameRateSpinBox->setRange(1, Constants::MaxFrameRate);
+    frameRateSpinBox->setValue(Constants::DefaultFrameRate);
     frameRateSpinBox->setMaximumWidth(60);
     rateQualityRow->addWidget(frameRateSpinBox);
     frameRateLabel = new QLabel("24 fps", this);
@@ -144,8 +151,8 @@ void MainWindow::setupSequenceToVideoTab()
     rateQualityRow->addSpacing(20);
     rateQualityRow->addWidget(new QLabel("Quality:"));
     qualitySpinBox = new QSpinBox(this);
-    qualitySpinBox->setRange(1, 51);
-    qualitySpinBox->setValue(23);
+    qualitySpinBox->setRange(Constants::MinQuality, Constants::MaxQuality);
+    qualitySpinBox->setValue(Constants::DefaultQuality);
     qualitySpinBox->setMaximumWidth(60);
     rateQualityRow->addWidget(qualitySpinBox);
     qualityLabel = new QLabel("High (CRF 23)", this);
@@ -158,19 +165,19 @@ void MainWindow::setupSequenceToVideoTab()
     QHBoxLayout *resolutionRow = new QHBoxLayout();
     resolutionRow->addWidget(new QLabel("Width:"));
     widthSpinBox = new QSpinBox(this);
-    widthSpinBox->setRange(1, 7680);
+    widthSpinBox->setRange(1, Constants::MaxVideoWidth);
     widthSpinBox->setValue(1920);
     widthSpinBox->setSingleStep(2);
-    widthSpinBox->setMaximumWidth(80);
+    widthSpinBox->setMaximumWidth(Constants::MaxSpinWidth);
     resolutionRow->addWidget(widthSpinBox);
     
     resolutionRow->addSpacing(10);
     resolutionRow->addWidget(new QLabel("Height:"));
     heightSpinBox = new QSpinBox(this);
-    heightSpinBox->setRange(1, 4320);
+    heightSpinBox->setRange(1, Constants::MaxVideoHeight);
     heightSpinBox->setValue(1080);
     heightSpinBox->setSingleStep(2);
-    heightSpinBox->setMaximumWidth(80);
+    heightSpinBox->setMaximumWidth(Constants::MaxSpinWidth);
     resolutionRow->addWidget(heightSpinBox);
     
     resolutionRow->addSpacing(20);
@@ -180,33 +187,38 @@ void MainWindow::setupSequenceToVideoTab()
     resolutionRow->addStretch();
     videoLayout->addLayout(resolutionRow);
     
-    mainLayout->addWidget(videoGroup);
-    
-    // Convert button
+    mainLayout->addWidget(videoGroup, 1); // Only videoGroup gets stretch
+
+    // Export Audio checkbox
+    exportAudioCheckBox = new QCheckBox("Export Audio (add silent track if none)", this);
+    exportAudioCheckBox->setChecked(false);
+    mainLayout->addWidget(exportAudioCheckBox);
+
+    // Button row: Convert and Show FFmpeg Command side by side
     convertBtn = new QPushButton("Convert to Video", this);
     convertBtn->setMinimumHeight(40);
-    convertBtn->setMaximumWidth(300);  // Limit button width
-    convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
-    
-    // Center the button
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(convertBtn);
-    buttonLayout->addStretch();
-    mainLayout->addLayout(buttonLayout);
-
+    convertBtn->setMaximumWidth(300);
+    convertBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; color:rgb(41, 190, 204); }");
     previewCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewCmdBtn->setMaximumWidth(300);
     previewCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
+    QHBoxLayout *buttonRow = new QHBoxLayout();
+    buttonRow->addStretch();
+    buttonRow->addWidget(convertBtn);
+    buttonRow->addSpacing(16);
+    buttonRow->addWidget(previewCmdBtn);
+    buttonRow->addStretch();
+    mainLayout->addLayout(buttonRow);
 
-    // Center it
-    QHBoxLayout *previewLayout = new QHBoxLayout();
-    previewLayout->addStretch();
-    previewLayout->addWidget(previewCmdBtn);
-    previewLayout->addStretch();
-    mainLayout->addLayout(previewLayout);
-    
-    mainLayout->addStretch();
+    // Command preview label and box
+    QLabel *cmdLabel = new QLabel("FFmpeg Command:", this);
+    mainLayout->addWidget(cmdLabel);
+    commandPreviewEdit = new QTextEdit(this);
+    commandPreviewEdit->setReadOnly(true);
+    commandPreviewEdit->setMaximumHeight(60);
+    commandPreviewEdit->setPlaceholderText("FFmpeg command will appear here...");
+    commandPreviewEdit->setStyleSheet("QTextEdit { color: #e0e0e0; }");
+    mainLayout->addWidget(commandPreviewEdit);
 }
 
 void MainWindow::setupVideoToSequenceTab()
@@ -258,7 +270,7 @@ void MainWindow::setupVideoToSequenceTab()
     QHBoxLayout *formatRow = new QHBoxLayout();
     formatRow->addWidget(new QLabel("Format:"));
     imageFormatCombo = new QComboBox(this);
-    imageFormatCombo->addItems({"PNG", "JPEG", "TIFF", "BMP", "EXR"});
+    imageFormatCombo->addItems(Constants::SupportedImageFormats);
     imageFormatCombo->setMaximumWidth(100);
     formatRow->addWidget(imageFormatCombo);
     formatRow->addStretch();
@@ -291,29 +303,31 @@ void MainWindow::setupVideoToSequenceTab()
     
     mainLayout->addWidget(imageGroup);
     
-    // Convert button
+    // Button row: Convert and Show FFmpeg Command side by side (unique for this tab)
     convertVideoBtn = new QPushButton("Convert to Image Sequence", this);
     convertVideoBtn->setMinimumHeight(40);
     convertVideoBtn->setMaximumWidth(300);
-    convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; }");
-    
-    // Center the button
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(convertVideoBtn);
-    buttonLayout->addStretch();
-    mainLayout->addLayout(buttonLayout);
-
-    QPushButton *previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
+    convertVideoBtn->setStyleSheet("QPushButton { font-weight: bold; font-size: 14px; color:rgb(41, 190, 204); }");
+    previewVideoCmdBtn = new QPushButton("Show FFmpeg Command", this);
     previewVideoCmdBtn->setMaximumWidth(300);
     previewVideoCmdBtn->setStyleSheet("QPushButton { font-size: 13px; }");
-
-    // Center the button
-    QHBoxLayout *previewLayout = new QHBoxLayout();
-    previewLayout->addStretch();
-    previewLayout->addWidget(previewVideoCmdBtn);
-    previewLayout->addStretch();
-    mainLayout->addLayout(previewLayout);
+    QHBoxLayout *buttonRow = new QHBoxLayout();
+    buttonRow->addStretch();
+    buttonRow->addWidget(convertVideoBtn);
+    buttonRow->addSpacing(16);
+    buttonRow->addWidget(previewVideoCmdBtn);
+    buttonRow->addStretch();
+    mainLayout->addLayout(buttonRow);
+    // Command preview label and box (unique for this tab)
+    QLabel *cmdLabelVideo = new QLabel("FFmpeg Command:", this);
+    mainLayout->addWidget(cmdLabelVideo);
+    commandPreviewEditVideoTab = new QTextEdit(this);
+    commandPreviewEditVideoTab->setReadOnly(true);
+    commandPreviewEditVideoTab->setMaximumHeight(60);
+    commandPreviewEditVideoTab->setPlaceholderText("FFmpeg command will appear here...");
+    commandPreviewEditVideoTab->setStyleSheet("QTextEdit { color: #e0e0e0; }");
+    mainLayout->addWidget(commandPreviewEditVideoTab);
+    mainLayout->addStretch();
 
     connect(previewVideoCmdBtn, &QPushButton::clicked, this, &MainWindow::showVideoToSequenceCommandPreview);
 
@@ -360,9 +374,6 @@ void MainWindow::connectSignals()
     connect(previewCmdBtn, &QPushButton::clicked, this, &MainWindow::showFFmpegCommandPreview);
     connect(frameRateSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::updateFrameRateDisplay);
     connect(qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::updateQualityDisplay);
-    connect(converter, &Converter::progressChanged, this, &MainWindow::onConversionProgress);
-    connect(converter, &Converter::finished, this, &MainWindow::onConversionFinished);
-    connect(converter, &Converter::logMessage, [this](const QString &message) { logOutput->append(message); });
     connect(savePresetBtn, &QPushButton::clicked, this, &MainWindow::saveCurrentPreset);
     connect(loadPresetBtn, &QPushButton::clicked, this, &MainWindow::loadSelectedPreset);
     connect(deletePresetBtn, &QPushButton::clicked, this, &MainWindow::deleteSelectedPreset);
@@ -392,7 +403,7 @@ void MainWindow::selectOutputPath()
 void MainWindow::startConversion()
 {
     if (isConverting) {
-        converter->cancel();
+        conversionService->cancelConversion();
         return;
     }
     QString inputPath = inputPathEdit->text();
@@ -416,24 +427,20 @@ void MainWindow::startConversion()
     settings.width = widthSpinBox->value();
     settings.height = heightSpinBox->value();
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    settings.exportAudio = exportAudioCheckBox->isChecked();
     logOutput->clear();
     progressBar->setVisible(true);
     progressBar->setValue(0);
     convertBtn->setText("Cancel");
     isConverting = true;
-    QStringList args = converter->buildFFmpegArguments(settings, true);
-    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
-    if (dlg.exec() == QDialog::Accepted) {
-        QString edited = dlg.getCommand();
-        settings.customCommand = edited;
-    }
-    converter->convertSequenceToVideo(settings);
+    // Use ConversionService
+    conversionService->startConversion(settings);
 }
 
 void MainWindow::startVideoToSequenceConversion()
 {
     if (isConverting) {
-        converter->cancel();
+        conversionService->cancelConversion();
         return;
     }
     QString inputVideo = videoInputEdit->text();
@@ -449,20 +456,13 @@ void MainWindow::startVideoToSequenceConversion()
     settings.extractAllFrames = extractAllFrames->isChecked();
     settings.startFrame = startFrameSpinBox->value();
     settings.endFrame = endFrameSpinBox->value();
-    QStringList args = converter->buildFFmpegArguments(settings, false);
-    EditableCommandDialog dlg(converter->findFFmpegPath() + " " + args.join(" "), this);
-    if (dlg.exec() == QDialog::Accepted) {
-        QString edited = dlg.getCommand();
-        settings.customCommand = edited;
-    } else {
-        return;
-    }
     logOutput->clear();
     progressBar->setVisible(true);
     progressBar->setValue(0);
     convertVideoBtn->setText("Cancel");
     isConverting = true;
-    converter->convertVideoToSequence(settings);
+    // Use ConversionService
+    conversionService->startConversion(settings);
 }
 
 void MainWindow::onConversionProgress(int percentage)
@@ -478,9 +478,7 @@ void MainWindow::onConversionFinished(bool success, const QString &message)
         convertVideoBtn->setText("Convert to Image Sequence");
     }
     isConverting = false;
-    
     logOutput->append(message);
-    
     if (success) {
         QMessageBox::information(this, "Success", "Conversion completed successfully!");
     } else {
@@ -530,11 +528,36 @@ void MainWindow::showFFmpegCommandPreview()
     settings.width = widthSpinBox->value();
     settings.height = heightSpinBox->value();
     settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    settings.exportAudio = exportAudioCheckBox->isChecked();
 
-    QStringList args = converter->buildFFmpegArguments(settings, true);
-    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
+    QString command = conversionService->buildFFmpegCommandPreview(settings, true);
+    commandPreviewEdit->setPlainText(command);
+}
 
-    QMessageBox::information(this, "FFmpeg Command Preview", command);
+void MainWindow::showSequenceToVideoCommandPreview()
+{
+    QString inputPath = inputPathEdit->text();
+    QString outputPath = outputPathEdit->text();
+
+    if (inputPath.isEmpty() || outputPath.isEmpty()) {
+        QMessageBox::warning(this, "Error", "Please set both input and output paths.");
+        return;
+    }
+
+    ConversionSettings settings;
+    settings.inputPath = inputPath;
+    settings.outputPath = outputPath;
+    settings.videoFormat = videoFormatCombo->currentText().toLower();
+    settings.videoCodec = videoCodecCombo->currentText();
+    settings.frameRate = frameRateSpinBox->value();
+    settings.quality = qualitySpinBox->value();
+    settings.width = widthSpinBox->value();
+    settings.height = heightSpinBox->value();
+    settings.maintainAspectRatio = maintainAspectRatio->isChecked();
+    settings.exportAudio = exportAudioCheckBox->isChecked();
+
+    QString command = conversionService->buildFFmpegCommandPreview(settings, true);
+    commandPreviewEdit->setPlainText(command);
 }
 
 void MainWindow::showVideoToSequenceCommandPreview()
@@ -555,10 +578,8 @@ void MainWindow::showVideoToSequenceCommandPreview()
     settings.startFrame = startFrameSpinBox->value();
     settings.endFrame = endFrameSpinBox->value();
 
-    QStringList args = converter->buildFFmpegArguments(settings, false);
-    QString command = converter->isFFmpegAvailable() ? converter->findFFmpegPath() + " " + args.join(" ") : "ffmpeg not found";
-
-    QMessageBox::information(this, "FFmpeg Command Preview", command);
+    QString command = conversionService->buildFFmpegCommandPreview(settings, false);
+    commandPreviewEditVideoTab->setPlainText(command);
 }
 
 void MainWindow::refreshPresetList() {

@@ -1,4 +1,5 @@
 // mainwindow.h
+// Main application window for Image Sequence Converter. Handles all UI and user interaction.
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -23,7 +24,10 @@
 #include "converter.h"
 #include "presetmanager.h"
 #include "editablecommanddialog.h"
+#include "constants.h"
+#include "conversionservice.h"
 
+// MainWindow: top-level window and controller for the app
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -33,6 +37,7 @@ public:
     ~MainWindow();
 
 private slots:
+    // UI event handlers
     void selectInputPath();
     void selectOutputPath();
     void startConversion();
@@ -44,6 +49,7 @@ private slots:
     void startVideoToSequenceConversion();
     void showFFmpegCommandPreview();
     void showVideoToSequenceCommandPreview();
+    void showSequenceToVideoCommandPreview();
     void saveCurrentPreset();
     void loadSelectedPreset();
     void deleteSelectedPreset();
@@ -83,6 +89,7 @@ private:
     QSpinBox *widthSpinBox;
     QSpinBox *heightSpinBox;
     QCheckBox *maintainAspectRatio;
+    QCheckBox *exportAudioCheckBox;
     
     // Video to Sequence controls
     QComboBox *imageFormatCombo;
@@ -92,8 +99,8 @@ private:
     QLineEdit *videoInputEdit;
     QLineEdit *seqOutputEdit;
     QPushButton *convertVideoBtn;
-    QLineEdit *commandPreviewEdit;
-    QPushButton *previewCmdBtn;
+    QTextEdit *commandPreviewEdit;
+    QTextEdit *commandPreviewEditVideoTab;
 
     // Preset controls
     QPushButton *savePresetBtn;
@@ -102,9 +109,14 @@ private:
     QComboBox *presetSelector;
     
     // Backend
-    Converter *converter;
+    //Converter *converter; // Replaced by ConversionService
+    ConversionService *conversionService;
     PresetManager *presetManager;
     bool isConverting;
+
+    // Command preview buttons
+    QPushButton *previewCmdBtn;
+    QPushButton *previewVideoCmdBtn;
 };
 
 #endif // MAINWINDOW_H

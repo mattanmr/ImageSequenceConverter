@@ -1,10 +1,12 @@
 // converter.cpp
+// Implements the Converter class, which manages FFmpeg-based conversion between image sequences and video files.
 #include "converter.h"
 #include <QApplication>
 #include <QStandardPaths>
 #include <QRegularExpression>
 #include <QDebug>
 
+// Constructor: initializes FFmpeg path and state
 Converter::Converter(QObject *parent)
     : QObject(parent)
     , ffmpegProcess(nullptr)
@@ -14,6 +16,7 @@ Converter::Converter(QObject *parent)
     ffmpegPath = findFFmpegPath();
 }
 
+// Destructor: ensures FFmpeg process is stopped
 Converter::~Converter()
 {
     if (ffmpegProcess && ffmpegProcess->state() != QProcess::NotRunning) {
@@ -22,14 +25,16 @@ Converter::~Converter()
     }
 }
 
+// Checks if FFmpeg is available on the system
 bool Converter::isFFmpegAvailable()
 {
     return !ffmpegPath.isEmpty();
 }
 
+// Attempts to find FFmpeg in common locations and PATH
 QString Converter::findFFmpegPath() const
 {
-    // Check common installation paths
+    // Check common installation paths and PATH
     QStringList possiblePaths = {
         "/usr/local/bin/ffmpeg",
         "/opt/homebrew/bin/ffmpeg",
@@ -46,6 +51,7 @@ QString Converter::findFFmpegPath() const
     return QString();
 }
 
+// Converts a sequence of images to a video file
 void Converter::convertSequenceToVideo(const ConversionSettings &settings)
 {
     if (isProcessing) {
@@ -84,6 +90,7 @@ void Converter::convertSequenceToVideo(const ConversionSettings &settings)
     ffmpegProcess->start(ffmpegPath, args);
 }
 
+// Converts a video file to a sequence of images
 void Converter::convertVideoToSequence(const ConversionSettings &settings)
 {
     if (isProcessing) {
@@ -122,6 +129,7 @@ void Converter::convertVideoToSequence(const ConversionSettings &settings)
     ffmpegProcess->start(ffmpegPath, args);
 }
 
+// Builds the FFmpeg command-line arguments for the conversion
 QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, bool isSequenceToVideo)
 {
     QStringList args;
@@ -149,6 +157,9 @@ QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, 
 
             args << "-framerate" << QString::number(settings.frameRate);
             args << "-i" << inputPattern;
+            if (settings.exportAudio) {
+                args << "-f" << "lavfi" << "-i" << "anullsrc=channel_layout=stereo:sample_rate=44100";
+            }
         }
 
         QString codecName = getVideoCodecName(settings.videoCodec);
@@ -163,6 +174,11 @@ QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, 
                              .arg(settings.width).arg(settings.height);
         } else {
             args << "-s" << QString("%1x%2").arg(settings.width).arg(settings.height);
+        }
+
+        if (settings.exportAudio) {
+            args << "-c:a" << "aac";
+            args << "-shortest";
         }
 
         args << "-f" << settings.videoFormat.toLower();
@@ -187,6 +203,7 @@ QStringList Converter::buildFFmpegArguments(const ConversionSettings &settings, 
 }
 
 
+// Returns the FFmpeg codec name corresponding to a user-friendly codec string
 QString Converter::getVideoCodecName(const QString &codec)
 {
     if (codec == "H.264") return "libx264";
@@ -196,6 +213,7 @@ QString Converter::getVideoCodecName(const QString &codec)
     return "libx264"; // Default
 }
 
+// Returns the file extension associated with a given video format
 QString Converter::getVideoFormatExtension(const QString &format)
 {
     QString lowerFormat = format.toLower();
@@ -207,6 +225,7 @@ QString Converter::getVideoFormatExtension(const QString &format)
     return "mp4"; // Default
 }
 
+// Finds image files in a directory matching common image file patterns
 QStringList Converter::findImageFiles(const QString &directory)
 {
     QDir dir(directory);
@@ -225,6 +244,7 @@ QStringList Converter::findImageFiles(const QString &directory)
     return absolutePaths;
 }
 
+// Cancels the ongoing conversion process, if any
 void Converter::cancel()
 {
     if (ffmpegProcess && isProcessing) {
@@ -233,6 +253,7 @@ void Converter::cancel()
     }
 }
 
+// Handles completion of the FFmpeg process
 void Converter::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     isProcessing = false;
@@ -255,6 +276,7 @@ void Converter::onProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
     }
 }
 
+// Handles errors occurring in the FFmpeg process
 void Converter::onProcessError(QProcess::ProcessError error)
 {
     isProcessing = false;
@@ -284,6 +306,7 @@ void Converter::onProcessError(QProcess::ProcessError error)
     emit finished(false, errorString);
 }
 
+// Reads and processes the output of the FFmpeg process
 void Converter::onProcessOutput()
 {
     if (!ffmpegProcess) return;
@@ -295,6 +318,7 @@ void Converter::onProcessOutput()
     parseProgress(output);
 }
 
+// Parses the progress output from FFmpeg to update conversion progress
 void Converter::parseProgress(const QString &output)
 {
     // Parse FFmpeg progress output
