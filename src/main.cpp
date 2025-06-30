@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // main.cpp
 // Application entry point. Sets up QApplication, style, and launches the main window.
 #include <QApplication>

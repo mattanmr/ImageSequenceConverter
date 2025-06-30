@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // presetmanager.cpp
 // Implements PresetManager, which handles persistent storage and retrieval of user conversion presets.
 #include "presetmanager.h"

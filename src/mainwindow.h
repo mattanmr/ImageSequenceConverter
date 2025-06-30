@@ -1,3 +1,5 @@
+// This code is provided as is, without warranty of any kind.
+
 // mainwindow.h
 // Main application window for Image Sequence Converter. Handles all UI and user interaction.
 #ifndef MAINWINDOW_H

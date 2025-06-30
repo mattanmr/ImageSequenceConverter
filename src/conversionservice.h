@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // conversionservice.h
 // Provides a high-level service interface for conversion operations, decoupling UI from conversion logic.
 #ifndef CONVERSIONSERVICE_H

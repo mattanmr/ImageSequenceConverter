@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // converter.cpp
 // Implements the Converter class, which manages FFmpeg-based conversion between image sequences and video files.
 #include "converter.h"

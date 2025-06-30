@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // constants.h
 // Centralized application-wide constants and supported format lists for Image Sequence Converter.
 #ifndef CONSTANTS_H

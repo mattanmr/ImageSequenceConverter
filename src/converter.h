@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // converter.h
 // Conversion logic for image sequence <-> video using FFmpeg. Handles process management and settings.
 #ifndef CONVERTER_H

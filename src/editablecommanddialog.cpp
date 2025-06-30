@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // editablecommanddialog.cpp
 // Implements EditableCommandDialog, a dialog for editing and copying custom FFmpeg commands.
 

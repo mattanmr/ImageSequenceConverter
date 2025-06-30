@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // presetmanager.h
 // Handles saving, loading, and removing user presets for conversion settings.
 #ifndef PRESETMANAGER_H

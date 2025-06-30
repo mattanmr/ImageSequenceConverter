@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // mainwindow.cpp
 // Implements the MainWindow class, which provides the main UI and user interaction logic for Image Sequence Converter.
 #include "mainwindow.h"

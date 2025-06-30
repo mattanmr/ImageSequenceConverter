@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // droplineedit.h
 // Custom QLineEdit subclass that accepts file/folder drag-and-drop for user convenience.
 

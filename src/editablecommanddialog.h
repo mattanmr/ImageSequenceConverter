@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // editablecommanddialog.h
 // Dialog for editing and copying custom FFmpeg commands.
 #ifndef EDITABLECOMMANDDIALOG_H

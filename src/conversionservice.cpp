@@ -1,3 +1,4 @@
+// This code is provided as is, without warranty of any kind.
 // conversionservice.cpp
 // Implements ConversionService, a high-level interface for conversion operations.
 #include "conversionservice.h"
